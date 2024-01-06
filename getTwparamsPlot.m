@@ -44,24 +44,24 @@ imagesc(cos(phiGrid(:,:,timeStamp)))
 caxis([min(cos(phiGrid),[],'all'),max(cos(phiGrid),[],'all')])
 title(['Traveling Wave',freq,'-',num2str(timeVals(timeStamp))])
 
-
+%%
 subplot(4,4,5:8)
 %plot the stair plot of the pgd/cluster
-if outputs.analysis=='Gradient'
+if strcmp(outputs.analysis,'Gradient') ==1
 stairs(timeVals,outputs.pgd(:,trial),'LineWidth',1,'Color','red')
 xlim([timeVals(1),timeVals(end)])
 title(['Phase Gradient Directionality for trial-',num2str(trial)])
 else
-stairs(timeVals,outputs.cluster(:,trial),'LineWidth',1,'Color','red')
-xlim([timeVals(1),timeVals(end)])
+stairs(timeVals(1:end-1),outputs.clusters(trial,:)/max(outputs.clusters(trial,:)),'LineWidth',1,'Color','black')
+xlim([timeVals(1),timeVals(end-1)])
 title(['Cluster size of travelling wave for trial-',num2str(trial)])
 end
 hold on
-sigPGDval = find(outputs.pgd>sigValue); %get significant pgd values
+sigPGDval = find(outputs.pgd(:,trial)>sigValue); %get significant pgd values
 if ~isempty(sigPGDval)
-ypts = 0.7*ones(1,length(sigPGDval));
-plot(timeVals(values),ypts,'.')
-ylim([0 0.8])
+ypts = 0.5*ones(1,length(sigPGDval));
+plot(timeVals(sigPGDval),ypts,'.')
+ylim([0 1.2])
 yticks(sigValue)
 yticklabels({'Significant'})
 end
@@ -74,11 +74,10 @@ powData = abs(hilbert(mean(data(:,:,trial)))).^2;
 stairs(timeVals,powData,'LineWidth',1,'Color','blue')
 xlim([timeVals(1),timeVals(end)])
 hold on
-sigPGDval = find(outputs.pgd>sigValue); %get significant pgd values
+sigPGDval = find(outputs.pgd(:,trial)>sigValue); %get significant pgd values
 if ~isempty(sigPGDval)
-ypts = 0.7*ones(1,length(sigPGDval));
-plot(timeVals(values),ypts,'.')
-ylim([0 0.8])
+ypts = 0.5*ones(1,length(sigPGDval));
+plot(timeVals(sigPGDval),ypts,'.')
 yticks(sigValue)
 yticklabels({'Significant'})
 end
@@ -92,9 +91,10 @@ subplot(4,4,14)
 %plot polar histogram of the direction
 polarhistogram(outputs.direction(:,trial))
 hold on
+sigPGDval = find(outputs.pgd(:,trial)>sigValue); %get significant pgd values
 if ~isempty(sigPGDval)
-polarhistogram(direction(sigPDGVal,trial))
-labels('All times','Only Significant')
+polarhistogram(outputs.direction(sigPGDval,trial))
+legend('All times','Only Significant')
 end
 title('Direction distribution')
 
@@ -103,8 +103,9 @@ subplot(4,4,15)
 %plot polar histograms of direction seperately for baseline and stimulus
 histogram(outputs.speed(:,trial),'Normalization','pdf')
 hold on
+sigPGDval = find(outputs.pgd(:,trial)>sigValue); %get significant pgd values
 if ~isempty(sigPGDval)
-histogram(speed(sigPGDval,trial),'Normalization','pdf')
+histogram(outputs.speed(trial,sigPGDval),'Normalization','pdf')
 hold on
 legend('All Timepoints','Significant')
 end
@@ -112,6 +113,3 @@ title('Traveling wave speed')
 xlabel('Speed (m/s)')
 ylabel('PDF')
 end
-
-
-
