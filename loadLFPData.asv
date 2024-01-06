@@ -34,9 +34,11 @@ function [data,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subjectNa
     numChannels = size(allTrials,1);
     numTrials = size(allTrials,3);
     if req~=1
-        filtData = 
+        filtData = allTrials;
+    else
     filtData = reshape(zscore(eegfilt(reshape(allTrials,[numChannels,length(timeVals)*numTrials]),fs,freqs(1),freqs(2),0,[],[],'fir1'),[],2),[numChannels,length(timeVals),numTrials]);    
-    data = filtData(:,:,setdiff(goodPos,badTrials));
+    end
+data = filtData(:,:,setdiff(goodPos,badTrials));
 end
 
 
