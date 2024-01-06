@@ -1,4 +1,4 @@
-function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,linearV,visulization)
+function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,linearV)
 % circ_lin_regress_2D is a function used to fit a 2D linear variables to a
 % circular variable. One exmaple of the application is to fit phase traveling wave
 % from linear coordinates.
@@ -20,6 +20,7 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % Rsquared denotes how much variance of the circular
 % variable is explain the regression model. To access the statitical
 % significace, please perform a permutaion procedure.
+%% from https://github.com/erfanzabeh/WaveMonk
 
 if nargin<2
     disp('Incomplete input')
@@ -83,26 +84,6 @@ pos_circ=mod(pos_circ,2*pi);
 
 % to calculate pgd
 PGD = 1- (((1-Rsquared)*(length(circularV-1)))/(length(circularV-1)-size(linearV,2)-1));
-if visulization
-    figure % figure1 visualising resultant vector length on the parameter space.
-    surf(slope1_Matrix,slope2_Matrix,Residual_resultant_vector_length) %make round parameter space.
-    hold on
-    scatter3(sl(1),sl(2),max(max(Residual_resultant_vector_length)),80,'k','filled')  % note the best fitting on parameter space
-    shading('flat');colormap('jet');cb=colorbar;view(0,90);axis('off');axis('equal')
-    set(get(cb,'Title') ,'String','R','fontsize',20);
-    title('Residual resultant vector length on parameter space') %
-    figure % figure2 visualising fitted plane and the residuals.
-    [x_grid,y_grid]=meshgrid(linspace(min(pos_x),max(pos_x),50),linspace(min(pos_y),max(pos_y),50)); % make plane matrix
-    mesh(x_grid,y_grid,mod(x_grid*sl(1)+y_grid*sl(2)+offs,2*pi),'facealpha',.5); % plot the fitted plane
-    shading('flat');colormap('jet');cb=colorbar;
-    set(get(cb,'Title') ,'String','Phase','fontsize',15);
-    hold on
-    for i=1:length(phase)
-        scatter3(pos_x(i),pos_y(i),phase(i),60,'r','filled') % plot the real phase values
-        plot3([pos_x(i),pos_x(i)],[pos_y(i),pos_y(i)],[phase(i),pos_circ(i)],'k','linewidth',2) % lineup the real phase values and the plane
-    end
-    title('Circular-linear regression data fitting');
-    %axis square
 end
 
 
