@@ -1,4 +1,4 @@
-function [goodDPos,distanceBins] = getStimDistBins(dataPath,subjectName,gridType,stimSize)
+function [goodDPos,distanceBins] = getStimDistBins(dataPath,subjectName,gridType)
 %load params
     expDate = '050817'; 
     protocolName = 'GRF_002';  
@@ -18,7 +18,7 @@ function [goodDPos,distanceBins] = getStimDistBins(dataPath,subjectName,gridType
     parameters = load(fullfile(folderName,'extractedData','parameterCombinations.mat'));
     aValsUnique = parameters.aValsUnique;
     eValsUnique = parameters.eValsUnique;
-    sValsUnique = 3*parameters.sValsUnique(stimSize);
+    sValsUnique = 3*parameters.sValsUnique;
 
     % Plot RFs and stimulus positions
     distanceList = sqrt((aValsUnique-rfAziList).^2+(eValsUnique-rfEleList).^2);
