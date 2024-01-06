@@ -6,8 +6,8 @@ function [data,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subjectNa
 % dataPath = 'G:\Bhargava_TravelingWaveProject\data\'; 
 % subjectName='alpaH'; 
 % gridType = 'Microelectrode'; 
-% freqs - ex. [30 60];
-% if req =1, get filtered data, else get raw data
+% freqs =  [30 60];
+% if req =1;, get filtered data, else get raw data
     expDate = '050817'; 
     protocolName = 'GRF_002';  
     fs = 2000;
@@ -38,9 +38,5 @@ function [data,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subjectNa
     else
     filtData = reshape(zscore(eegfilt(reshape(allTrials,[numChannels,length(timeVals)*numTrials]),fs,freqs(1),freqs(2),0,[],[],'fir1'),[],2),[numChannels,length(timeVals),numTrials]);    
     end
-data = filtData(:,:,setdiff(goodPos,badTrials));
+    data = filtData(:,:,setdiff(goodPos,badTrials));
 end
-
-
-
-
