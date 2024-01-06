@@ -1,5 +1,6 @@
 %overview of analysis
 %% load and filter data 
+% currently only coded for subject AlpaH
 dataPath = 'G:\Bhargava_TravelingWaveProject\data\';
 subjectName='alpaH';
 gridType = 'Microelectrode';
