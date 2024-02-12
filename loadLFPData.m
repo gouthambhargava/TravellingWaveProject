@@ -39,7 +39,7 @@ function [filtData,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subje
     [b,a]=butter(filtOrder,normBand,'bandpass');    
     for i=1:size(data,3)
         signal = zscore(data(:,:,i))';
-        filtData=filtfilt(b,a,signal)';
+        filtData(:,:,i)=filtfilt(b,a,signal)';
     end  
     end
 end
