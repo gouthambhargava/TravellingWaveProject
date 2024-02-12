@@ -1,4 +1,4 @@
-function [data,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subjectName,gridType,stimSize,freqs,req)
+function [filtData,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subjectName,gridType,stimSize,freqs,req)
 % load microelectrode data for specified  and filter lfp 
 % using 150817/GRF_002 for this study presently
 % inputs - 
@@ -12,7 +12,6 @@ function [data,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subjectNa
     protocolName = 'GRF_002';  
     fs = 2000;
     folderName = fullfile(dataPath,subjectName,gridType,expDate,protocolName);
-    axisLims = [2 4.5 -4 -1.5];
     rfData = load(fullfile(dataPath,subjectName,gridType,'\RFData.mat')); 
     goodElectrodes = rfData.highRMSElectrodes;
     goodElectrodes = goodElectrodes(goodElectrodes<=81); % Only microelectrodes
@@ -31,14 +30,18 @@ function [data,goodElectrodes,goodPos,timeVals] = loadLFPData(dataPath,subjectNa
     end    
     allTrials = permute(allTrials,[3,2,1]);    
 
-    numChannels = size(allTrials,1);
-    numTrials = size(allTrials,3);
+    data = allTrials(:,:,setdiff(goodPos,badTrials));
     if req~=1
-        filtData = allTrials;
+        filtData = data;
     else
-    filtData = reshape(zscore(eegfilt(reshape(allTrials,[numChannels,length(timeVals)*numTrials]),fs,freqs(1),freqs(2),0,[],[],'fir1'),[],2),[numChannels,length(timeVals),numTrials]);    
+    normBand=freqs/(fs/2);
+    filtOrder = 4;
+    [b,a]=butter(filtOrder,normBand,'bandpass');    
+    for i=1:size(data,3)
+        signal = zscore(data(:,:,i))';
+        filtData=filtfilt(b,a,signal)';
+    end  
     end
-    data = filtData(:,:,setdiff(goodPos,badTrials));
 end
 
 

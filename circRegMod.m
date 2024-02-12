@@ -18,7 +18,7 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % variables at the ascending direction. The unit is radian per linear unit
 % sl is the slopes of phase change relative to each column in linearV.
 % Rsquared denotes how much variance of the circular
-% variable is explain the regression model. To access the statitical
+% variable is explained by the regression model. To access the statitical
 % significace, please perform a permutaion procedure.
 %% from https://github.com/erfanzabeh/WaveMonk
 
@@ -83,7 +83,7 @@ Rsquared=cc^2;
 pos_circ=mod(pos_circ,2*pi);
 
 % to calculate pgd
-PGD = 1- (((1-Rsquared)*(length(circularV-1)))/(length(circularV-1)-size(linearV,2)-1));
+PGD = 1- (((1-Rsquared)*(length(circularV)-1))/(length(circularV)-size(linearV,2)-1));
 end
 
 
