@@ -319,8 +319,8 @@ fRes=2; sd=0.025; fRange = [0 100]; cLims = [-2.5 2.5]; timeRange = [-0.5 1];
                     xlim(hStatsGrid(2),axisRange1List{2});
                     %plot amp propagation plots 
                     imagesc(ampGrid(:,:,timeRangeProp(ind)),'parent',hGridPlots(3))
-                    U = cos(phiGrid(:,:,timeRangeProp(ind))); 
-                    V = sin(phiGrid(:,:,timeRangeProp(ind))); 
+                    U = sin(phiGrid(:,:,timeRangeProp(ind))); 
+                    V = cos(phiGrid(:,:,timeRangeProp(ind))); 
                     caxis(hGridPlots(3),[min(ampGrid(:,:,timeRangeProp(1):timeRangeProp(end)),[],'all'),max(ampGrid(:,:,timeRangeProp(1):timeRangeProp(end)),[],'all')])
                     hold(hGridPlots(3),'on')
                     quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots(3))
