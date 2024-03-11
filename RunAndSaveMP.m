@@ -25,53 +25,16 @@ Max_iterations = 500; % number of iterations
 for i=1:numElectrodes
     eNum = goodElectrodes(i);
 
-    if ~exist(fullfile(folderNameMP,(['elec' num2str(eNum) '/GaborMP/mp0.bok.000'])), 'file')
-
-        tmp = load(fullfile(folderName,'segmentedData','LFP',['elec' num2str(eNum) '.mat']),'analogData');
-        inputSignal = tmp.analogData;
+    tmp = load(fullfile(folderName,'segmentedData','LFP',['elec' num2str(eNum) '.mat']),'analogData');
+    inputSignal = tmp.analogData;
+    tag = sprintf('elec%d/',eNum);
     
-        tag = sprintf('elec%d/',eNum);
     
-        % Import the data
-        X(:,:,1) = inputSignal';
-        L = size(X,1);
-        signalRange = [1 L]; % full range
-        importData(X,folderNameMP,tag,signalRange,Fs);
-    
-        % perform Gabor decomposition
-        Numb_points = L; % length of the signal
-        runGabor(folderNameMP,tag,Numb_points,Max_iterations);
-
-        gaborInfo = getGaborData(folderNameMP,tag,1);
-        wrap=1;
-        numTrials = length(gaborInfo);
-        analogData = zeros(numTrials,L);
-        
-        for itrial=1:numTrials
-            gaborData = gaborInfo{itrial}.gaborData;
-            gaborData(:,(gaborData(2,:)==0)) = []; % Remove atoms with zero frequency
-            analogData(itrial,:) = reconstructSignalFromAtomsMPP(gaborData,L,wrap);
-        end
-
-        filetoSave=fullfile(folderNameReconstMP,['elec' num2str(eNum) '.mat']);
-        save(filetoSave,"analogData");
-        clear gaborInfo
-    else
-        tag = sprintf('elec%d/',eNum);
-        wrap = 1;
-        gaborInfo = getGaborData(folderNameMP,tag,1);
-        numTrials = length(gaborInfo);
-        L = length(timeVals);        
-        analogData = zeros(numTrials,L);
-        
-        for itrial=1:length(gaborInfo)
-            gaborData = gaborInfo{itrial}.gaborData;
-            gaborData(:,(gaborData(2,:)==0)) = []; % Remove atoms with zero frequency
-            analogData(itrial,:) = reconstructSignalFromAtomsMPP(gaborData,L,wrap);
-        end
-
-        filetoSave=fullfile(folderNameReconstMP,['elec' num2str(eNum) '.mat']);
-        save(filetoSave,"analogData");
-        clear gaborInfo
-    end
+    % perform Gabor decomposition
+    Numb_points = L; % length of the signal
+    [gaborInfo,header] = getStochasticDictionaryMP3p1(inputSignal,timeVals,maxIteration,adaptiveDictionaryParam,dictionarySize);
+    filetoSave=fullfile(folderNameReconstMP,['elec' num2str(eNum) '.mat']);
+    save(filetoSave,'gaborInfo','header');
+    clear gaborInfo
 end
+    
