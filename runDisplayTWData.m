@@ -1,14 +1,6 @@
 % This code runs the main display program (displayTWData)
-
-% The following programs should be downloaded and added to Matlab path 
-% 1. Chronux: download from http://chronux.org/
-% 2. ComonPrograms: https://github.com/supratimray/CommonPrograms
-% 3. Gamma Length Project repository: https://github.com/supratimray/GammaLengthProjectCodes)
-% 4. Supporting matlab files for MP: http://www.fuw.edu.pl/~durka/software/mp/.
-% 5. Cricular statistics toolbox: https://github.com/circstat/circstat-matlab
-
 %% select data of particular orientation
-dataPath = 'G:\Bhargava_TravelingWaveProject\data\';
+dataPath = 'E:\IISc_exp\IISC_work\GitScripts\monkeyData\data\';
 gridType = 'Microelectrode';
 subjectName='alpaH'; expDate = '130418'; protocolName = 'GRF_004'; 
 sizePos = 7; %0.1500 (1)   0.3000 (2)    0.6000 (3)   1.2000 (4)   2.4000 (5)    4.7900 (6)   9.6000 (7) all (8)
@@ -19,14 +11,15 @@ selectedElectrodes = [40 41 42 43 44 45];
 orientation = 9; % 0 (1)   22 (2)   45 (3)   67 (4)   90 (5)  112 (6)  135 (7)  157 (8) all orientations (9)
 displayTWData(subjectName,expDate,protocolName,dataPath,sizePos,orientation,selectedElectrodes)
 
-% To get travelling wave params for a single trial
+%% To get travelling wave params for a single trial
 trialNo = 1;
+freqs = [30 60];
 nPerm = 250; %performance similar with 250/500/1000 permutations. Decreases from 250 downwards.
 [data,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sizePos,orientation,4);
 data = squeeze(data(:,trialNo,:));
 TW_outputs = getTWCircParams(data,timeVals,goodElectrodes,freqs,0,nPerm);
 
-% plot TW outputs
+%% plot TW outputs
 pgd = TW_outputs.pgd;
 pgdP = TW_outputs.pgdPerm;
 asigValues = find(pgdP>pgd);
