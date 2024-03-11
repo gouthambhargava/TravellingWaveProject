@@ -1,4 +1,4 @@
-function displayTWData(subjectName,expDate,protocolName,dataPath,sizePos,orientation,selectedElectrodes)
+function displayTWData(subjectName,expDate,protocolName,dataPath,sizePos,orientation,selectedElectrodes,TSreq)
 
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;
 backgroundColor = 'w'; panelHeight = 0.1;
@@ -6,7 +6,7 @@ gridType = 'Microelectrode';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Getting all data...');
-[allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sizePos,orientation,4);
+[allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sizePos,orientation,TSreq);
 %%%%%%%%%%%%%%%%%%%%%%%% Plot RF information %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hGridPlots = getPlotHandles(4,1,[0.025 0.05 0.1 0.8],0.025,0.05,0);
 numSelectedElectrodes = length(selectedElectrodes);

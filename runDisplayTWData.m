@@ -9,7 +9,7 @@ sizePos = 7; %0.1500 (1)   0.3000 (2)    0.6000 (3)   1.2000 (4)   2.4000 (5)   
 req = 1; %load reconstructed MP data for whole gamma band
 selectedElectrodes = [40 41 42 43 44 45];
 orientation = 9; % 0 (1)   22 (2)   45 (3)   67 (4)   90 (5)  112 (6)  135 (7)  157 (8) all orientations (9)
-displayTWData(subjectName,expDate,protocolName,dataPath,sizePos,orientation,selectedElectrodes)
+displayTWData(subjectName,expDate,protocolName,dataPath,sizePos,orientation,selectedElectrodes,req)
 
 %% To get travelling wave params for a single trial
 trialNo = 1;
