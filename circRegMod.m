@@ -4,14 +4,14 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % from linear coordinates.
 %
 % For method details, see Zabeh et al. 2023
-% as per Theta and Alpha Oscillations Are Traveling Waves in the Human
+% As per Theta and Alpha Oscillations Are Traveling Waves in the Human
 % Neocortex -Honghui Zhang, Andrew J. Watrous, Ansh Patel, Joshua Jacobs
 %
+% Inputs
 % linearV is a N by 2 matrix convey the linear variables. circularV (in radian) is a N
-% by 1 array, which we are trying to fit. The algorithm handles wrapping-up cases on its own.
-% visulization is a logic variable. It generlizes 2 visualization plot. One is the residual.
-%
-% direction of circular variable ascending with linear variables. Please
+% by 1 array, which we are trying to fit. The algorithm handles wrapping-up cases on its own
+% Outputs
+% Direction of circular variable is ascending with linear variables. Please
 % note the direction of wave propagation will be 180 degree from this
 % number as wave propagates to phase descending direction.
 % spatial_frequency is the change rate of circular variable to linear
@@ -20,7 +20,8 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % Rsquared denotes how much variance of the circular
 % variable is explained by the regression model. To access the statitical
 % significace, please perform a permutaion procedure.
-%% from https://github.com/erfanzabeh/WaveMonk
+% from https://github.com/erfanzabeh/WaveMonk
+%%
 pos_x = linearV(:,1);
 pos_y = linearV(:,2);
 phase = mod(circularV,2*pi);
@@ -29,12 +30,10 @@ phase = mod(circularV,2*pi);
 % here 'phase' is the actual phase and 'pos_x-slope2*pos_y' is the predicted phase
 myfun = @(slope1,slope2)sqrt((sum(cos(phase-slope1*pos_x-slope2*pos_y)/length(phase)).^2 + (sum(sin(phase-(slope1*pos_x)-slope2*pos_y))/length(phase)).^2));
 
-
 % arrange range and steplength for parameter space. angle ranges 2pi
 % and spatial frequency range from 0 to 18 degree per unit. the upper
 % limit of spatial frequency is depend on the spatial nyquist
-% frequency. You may change the steplength to anything but watch out
-% for computation time.
+% frequency. 
 
 % angle_range=pi*(0:5:360)/180;
 % spatial_frequency_range=(0:1:18)*pi/180;
