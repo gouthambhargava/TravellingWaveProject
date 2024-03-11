@@ -6,7 +6,7 @@ gridType = 'Microelectrode';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Getting all data...');
-[allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sizePos,orientation,1);
+[allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sizePos,orientation,4);
 %%%%%%%%%%%%%%%%%%%%%%%% Plot RF information %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hGridPlots = getPlotHandles(4,1,[0.025 0.05 0.1 0.8],0.025,0.05,0);
 numSelectedElectrodes = length(selectedElectrodes);
@@ -105,7 +105,7 @@ filterOrder = 4;
 thresholdFactor = 1;
 baselinePeriodS = [-0.5 0]; 
 stimulusPeriodS = [0.25 0.75];
-fRes=2; sd=0.025; fRange = [0 100]; cLims = [-2.5 2.5]; timeRange = [-0.5 1];
+fRange = [0 100]; cLims = [-2.5 2.5]; timeRange = [-0.5 1];
 freqRangeHz = [str2double(get(hFreqRangeMin,'String')) str2double(get(hFreqRangeMax,'String'))];
 trialNum = trialNumList((get(hTrial,'val')));
 disp('Calculating TW parameters')
@@ -116,6 +116,15 @@ disp('Calculating TW parameters')
         % Filtering options
         freqRangeHz = [str2double(get(hFreqRangeMin,'String')) str2double(get(hFreqRangeMax,'String'))];
 %       filteringMethod = get(hMethod,'val');
+        Fs = 2000;
+        
+        % Tf options
+        movingwin = [0.25 0.025];
+        params.tapers   = [1 1];
+        params.pad      = -1;
+        params.Fs       = Fs;
+        params.trialave = 0; %averaging across trials
+        blRange = [-0.5 0]; 
 
         % Data choices
         selectedElectrodes0 = str2num(get(hElectrodes,'String')); %#ok<ST2NM>
@@ -141,18 +150,17 @@ disp('Calculating TW parameters')
          
         %%%%%%%%%%%%%%%%%%%%%%%%%%% Plot data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for i=1:numSelectedElectrodes
-            signalAllTrials = squeeze(allData(selectedElectrodes(i),:,:));
-            cgt = zeros(numel(fRange(1):fRes:fRange(2)),size(signalAllTrials,2),size(signalAllTrials,1));
-              
+            signalAllTrials = squeeze(allData(selectedElectrodes(i),:,:));              
             [~,~,~,burstTS,bpfSignalAllTrials,~] = getHilbertBurst(signalAllTrials(trialNum,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeHz,filterOrder,1);
-            for tfi = 1:size(signalAllTrials,1)
-                [cgt(:,:,tfi),freqVals]=getCGT(signalAllTrials(tfi,:),timeVals,fRange,fRes,sd);
-            end
-            TFPow = log10(abs(cgt).^2);   
-            basePowS = repmat(mean(TFPow(:,(dsearchn(timeVals',baselinePeriodS(1)):dsearchn(timeVals',baselinePeriodS(2))),trialNum),2),1,size(TFPow,2));
-            basePowA = repmat(mean(mean(TFPow(:,(dsearchn(timeVals',baselinePeriodS(1)):dsearchn(timeVals',baselinePeriodS(2))),:),2),3),1,size(TFPow,2));
-            corrPowS = TFPow(:,:,trialNum)- basePowS;
-            corrPowA = mean(TFPow,3) - basePowA;
+            
+            [S,timeTF,freqVals] = mtspecgramc(signalAllTrials',movingwin,params);
+            xValToPlot = timeTF+timeVals(1)-1/Fs;
+            TFPow = log10(abs(S).^2); 
+            blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
+            blPower = mean(TFPow(blPos,:,:),1);
+            logSBL = repmat(blPower,length(xValToPlot),1);
+            corrPowA = 10*(mean(TFPow,3)-mean(logSBL,3));
+            corrPowS = 10*(TFPow(:,:,trialNum)-logSBL(:,:,trialNum));
 
             %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%  
             %plot the burst
@@ -165,18 +173,18 @@ disp('Calculating TW parameters')
             hold(hSignalSingleTrial(i),'off');
             
             % plot TF single trial
-            pcolor(hTFSingleTrial(i),timeVals,freqVals,corrPowS);
+            pcolor(hTFSingleTrial(i),xValToPlot,freqVals,corrPowS');
             shading(hTFSingleTrial(i),'interp');
             colormap(hTFSingleTrial(i), 'jet')
             axis(hTFSingleTrial(i),[timeRange fRange]);
-            caxis(hTFSingleTrial(i),cLims);
+%             caxis(hTFSingleTrial(i),cLims);
             
             % plot TF all trial
-            pcolor(hTFAllTrials(i),timeVals,freqVals,corrPowA);
+            pcolor(hTFAllTrials(i),xValToPlot,freqVals,corrPowA');
             shading(hTFAllTrials(i),'interp');
             colormap(hTFAllTrials(i), 'jet')        
             axis(hTFAllTrials(i),[timeRange fRange]);
-            caxis(hTFAllTrials(i),cLims);
+%             caxis(hTFAllTrials(i),cLims);
         end
          % Plot pgd values with significance
          plot(hStatsGrid(1),timeVals,outputs.pgd,'LineWidth',2)

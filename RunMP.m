@@ -35,5 +35,4 @@ for i=1:numElectrodes
     filetoSave=fullfile(folderNameReconstMP,['elec' num2str(eNum) '.mat']);
     save(filetoSave,'gaborInfo','header');
     clear gaborInfo
-end
-    
+end 
