@@ -1,8 +1,7 @@
 % Modified from getBurstLengthHilbert in https://github.com/supratimray/GammaLengthProjectCodes.
 
-function [burstLengthS,burstStartS,burstEndS,burstTS,bpfSignal,hilbertPower] = getBurstLengthHilbert(analogData,timeVals,thresholdFactor,displayFlag,stimulusPeriodS,baselinePeriodS,burstFreqRangeHz,filterOrder,req)
+function [burstLengthS,burstStartS,burstEndS,burstTS,bpfSignal,hilbertPower] = getHilbertBurst(analogData,timeVals,thresholdFactor,displayFlag,stimulusPeriodS,baselinePeriodS,burstFreqRangeHz,filterOrder,req)
 
-if ~exist('displayFlag','var');         displayFlag=1;                  end
 if ~exist('stimulusPeriodS','var');     stimulusPeriodS=[0.5 1.5];      end
 if ~exist('baselinePeriodS','var');     baselinePeriodS=[-1 0];         end
 if ~exist('burstFreqRangeHz','var');    burstFreqRangeHz=[40 60];       end

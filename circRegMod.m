@@ -21,12 +21,6 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % variable is explained by the regression model. To access the statitical
 % significace, please perform a permutaion procedure.
 %% from https://github.com/erfanzabeh/WaveMonk
-
-if nargin<2
-    disp('Incomplete input')
-elseif nargin==2
-    visulization=true;
-end
 pos_x = linearV(:,1);
 pos_y = linearV(:,2);
 phase = mod(circularV,2*pi);
@@ -38,15 +32,15 @@ myfun = @(slope1,slope2)sqrt((sum(cos(phase-slope1*pos_x-slope2*pos_y)/length(ph
 
 % arrange range and steplength for parameter space. angle ranges 2pi
 % and spatial frequency range from 0 to 18 degree per unit. the upper
-% limit of spatial frequency depends on the spatial nyquist
+% limit of spatial frequency is depend on the spatial nyquist
 % frequency. You may change the steplength to anything but watch out
 % for computation time.
 
-% angle_range=pi*(0:1:360)/180;
-% spatial_frequency_range=(0:.1:18)*pi/180;
+% angle_range=pi*(0:5:360)/180;
+% spatial_frequency_range=(0:1:18)*pi/180;
 
-angle_range=(0:2:360)*pi/180;
-spatial_frequency_range=(0:1:36)*pi/180;
+angle_range=pi*(0:10:360)/180;
+spatial_frequency_range=(0:1:18)*pi/180;
 
 [angleMatrix,spatial_frequency_Matrix] = meshgrid(angle_range,spatial_frequency_range); % make it to a matrix for arrayfun
 
@@ -80,7 +74,7 @@ pos_circ_mean = mod(angle(sum(exp(1i*pos_circ))/length(phase)),2*pi); % circular
 cc = sum(sin(phase - phase_mean) .* sin(pos_circ - pos_circ_mean)) / sqrt( sum(sin(phase - phase_mean).^2) * sum(sin(pos_circ - pos_circ_mean).^2) );
 % calculating the circ-correlation coefficient between measured phase and fitted
 Rsquared=cc^2;
-pos_circ=mod(pos_circ,2*pi);
+% pos_circ=mod(pos_circ,2*pi);
 
 % to calculate pgd
 PGD = 1- (((1-Rsquared)*(length(circularV)-1))/(length(circularV)-size(linearV,2)-1));
