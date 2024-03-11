@@ -13,7 +13,8 @@ Glossary of scripts
 - displayTWData - GUI to view travelling wave parameters
 - getTWCircParams - run circular regression with burst detection for calculating TW parameters
 - RunMP - run matching pursuit (stochastic algo) to extract gabor data and to save reconstructed time series
-- getHilbertBurst - modified script from gamma length project, to avoid
-- filtering of data and feed reconstructed ts directly
+- getHilbertBurst - modified script from gamma length project, to avoid filtering of data and feed reconstructed time series directly
 - load Data - load the unfiltered time series or reconstructed gamma data 
 - circRegMod - calcualtes circular regression and give TW parameters
+- gammaBurstMPParams - extracts data following MP burst detection for plotting
+
