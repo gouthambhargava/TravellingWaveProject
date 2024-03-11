@@ -7,6 +7,7 @@ monkeyName = 'alpaH'; expDate = '130418'; protocolName = 'GRF_004';
 gridType = 'Microelectrode';
 rfData = load([monkeyName 'MicroelectrodeRFData.mat']); % selecting good electrodes as per RMS values from Dubey and Ray, Sci Rep, 2020
 goodElectrodes = rfData.highRMSElectrodes;
+freqRange = [30 60];
 
 numElectrodes = length(goodElectrodes);
 
@@ -19,9 +20,9 @@ makeDirectory(folderNameReconstMP);
 tmp = load(fullfile(folderName,'segmentedData','LFP','lfpInfo.mat'),'timeVals');
 timeVals = tmp.timeVals;
 Fs = round(1/((timeVals(2)-timeVals(1))));
-
 Max_iterations = 500; % number of iterations
 
+%% run this section to generate gaborData and save it
 for i=1:numElectrodes
     eNum = goodElectrodes(i);
 
@@ -32,7 +33,30 @@ for i=1:numElectrodes
     % perform Gabor decomposition
     Numb_points = L; % length of the signal
     [gaborInfo,header] = getStochasticDictionaryMP3p1(inputSignal,timeVals,maxIteration,adaptiveDictionaryParam,dictionarySize);
-    filetoSave=fullfile(folderNameReconstMP,['elec' num2str(eNum) '.mat']);
+    filetoSave=fullfile(folderNameMP,['elec' num2str(eNum) '.mat']);
     save(filetoSave,'gaborInfo','header');
     clear gaborInfo
 end 
+
+%% run this section if MP data has been saved and LFP time series is to be obtained from the MP data
+% modify freqRange accordingly to obtain time series comprising of only
+% those atoms
+for i=1:numElectrodes
+    eNum = goodElectrodes(i);
+    fileName=fullfile(folderNameReconstMP,['elec' num2str(eNum) '.mat']);
+    load(filetoSave)
+    % some constants related to the internal structure of the 'book':
+    scale=1;freq=2;pos=3;mod=4;amp=5;phi=6;HSr=1;HSs=2;
+    reconSig=zeros(1,h(HSs));
+    numTrials = size(gaborInfo,1);
+    
+    for ind=1:numTrials
+        gaborInt = squeeze(gaborInfo(ind,:,:));
+        freqValues = cat(1,find(gaborInt(:,2)<freqRange(1)),find(gaborInt(:,2)>freqRange(2)));
+        gaborInt(freqValues,:) = [];
+        reconSig = reconSig+gabor(header(1,HSs)/header(1,HSr),header(1,HSr),gaborInt(:,scale),gaborInt(:,freq),gaborInt(:,pos),gaborInt(:,amp),gaborInt(:,phi));
+    end
+    filetoSave=fullfile(folderNameReconstMP,['LFP_elec' num2str(eNum) '.mat']);
+    save(filetoSave,'reconSig');
+end
+    
