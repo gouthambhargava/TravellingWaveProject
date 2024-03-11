@@ -21,6 +21,8 @@ tmp = load(fullfile(folderName,'segmentedData','LFP','lfpInfo.mat'),'timeVals');
 timeVals = tmp.timeVals;
 Fs = round(1/((timeVals(2)-timeVals(1))));
 Max_iterations = 500; % number of iterations
+adaptiveDictionaryParam=0.9;
+dictionarySize=2500000;
 
 %% run this section to generate gaborData and save it
 for i=1:numElectrodes
@@ -31,7 +33,6 @@ for i=1:numElectrodes
     tag = sprintf('elec%d/',eNum);
     
     % perform Gabor decomposition
-    Numb_points = L; % length of the signal
     [gaborInfo,header] = getStochasticDictionaryMP3p1(inputSignal,timeVals,maxIteration,adaptiveDictionaryParam,dictionarySize);
     filetoSave=fullfile(folderNameMP,['elec' num2str(eNum) '.mat']);
     save(filetoSave,'gaborInfo','header');
