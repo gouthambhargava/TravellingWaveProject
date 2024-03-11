@@ -6,7 +6,7 @@ subjectName='alpaH'; expDate = '130418'; protocolName = 'GRF_004';
 sizePos = 7; %0.1500 (1)   0.3000 (2)    0.6000 (3)   1.2000 (4)   2.4000 (5)    4.7900 (6)   9.6000 (7) all (8)
 % only 6 sizes (2-7) for kesari and protocols other than the one being used
 % for alpaH, adjust accordingly
-req = 1; %load reconstructed MP data for whole gamma band
+req = 4; %load reconstructed MP data for whole gamma band
 selectedElectrodes = [40 41 42 43 44 45];
 orientation = 9; % 0 (1)   22 (2)   45 (3)   67 (4)   90 (5)  112 (6)  135 (7)  157 (8) all orientations (9)
 displayTWData(subjectName,expDate,protocolName,dataPath,sizePos,orientation,selectedElectrodes,req)
