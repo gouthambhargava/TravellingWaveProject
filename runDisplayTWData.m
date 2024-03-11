@@ -8,7 +8,7 @@
 % 5. Cricular statistics toolbox: https://github.com/circstat/circstat-matlab
 
 %% select data of particular orientation
-dataPath = 'E:\IISc_exp\IISC_work\GitScripts\monkeyData\data\';
+dataPath = 'G:\Bhargava_TravelingWaveProject\data\';
 gridType = 'Microelectrode';
 subjectName='alpaH'; expDate = '130418'; protocolName = 'GRF_004'; 
 sizePos = 6;
