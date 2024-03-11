@@ -29,7 +29,6 @@ for i=1:numElectrodes
     inputSignal = tmp.analogData;
     tag = sprintf('elec%d/',eNum);
     
-    
     % perform Gabor decomposition
     Numb_points = L; % length of the signal
     [gaborInfo,header] = getStochasticDictionaryMP3p1(inputSignal,timeVals,maxIteration,adaptiveDictionaryParam,dictionarySize);
