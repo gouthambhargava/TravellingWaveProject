@@ -274,10 +274,11 @@ disp('Calculating TW parameters')
                  plot(hStatsGrid(2),timeVals,mag,'LineWidth',1)
             else 
                 for gaborInd = 1:numel(goodElectrodes)
+                    elec = goodElectrodes(gaborInd);
                     gaborPath = fullfile(dataPath,subjectName,gridType,expDate,protocolName,'mpAnalysis',[elec,num2str(selectedElectrodes(i))]);
                     signalAllTrials = squeeze(allData(gaborInd,:,:));
-                    if ~isexist(gaborPath)
-                        disp('Execute RunMP to run matvhing pursuit')
+                    if ~exist(gaborPath,'file')
+                        disp('Execute RunMP to run matching pursuit')
                     else
 %                       gammaAtom = zeros(1,length(goodElectrodes));
                         burstTS = nan(length(goodElectrodes),length(timeVals));
@@ -292,7 +293,7 @@ disp('Calculating TW parameters')
                         thresholdFactor = diffPower*thresholdFraction;
                         [lengthList,freqList,timeList,~,~,~] = getBurstLengthMP(signalAllTrials(trialNum,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeHz,[],[],[],gaborInfo,header);
                         if ~isempty(lengthList)
-                            [~,sigBursts(gaborInd,:), burstTS(gaborInd,:), ~] = gammaBurstMPParams(lengthList,timeList,freqList,squeeze(gaborInfo),timeVals);  
+                            [~,sigBursts(gaborInd,:),burstTS(gaborInd,:), ~] = gammaBurstMPParams(lengthList,timeList,freqList,squeeze(gaborInfo),timeVals);  
                         end
                     end
                 end
