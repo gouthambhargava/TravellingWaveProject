@@ -1,41 +1,36 @@
-function [allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sizePos,orientation,req)
-    %Inputs
-    %orientation = 0 deg (input 1)   22 deg (input 2)   45 deg (input 3)   67 deg (input 4)   90 deg (input 5)  112 deg (input 6)  135 deg (input 7)  157 deg (input 8) all orientations (input 9)
-    %if req = 1, load the MP data of whole gamma band (25-75Hz)
-    %req = 2, load the MP data of slow gamma band (25-45Hz)
-    %req = 3, load the MP data of fast gamma band (45-75Hz)
-    %req = 4, load unfiltered LFP data
+% sPos: position of sf or size parameter. Takes values between 1-6: [0.5 1 2 4 8 all]
+% oriPos: position of orientation parameter. Takes values between 1-9: [0 22.5 45 67.5 90 112.5 135 157.5 all] 
+% param: 'sf' or 'size' to specify whether this corresponds to an SFOri or a sizeOri protocol
 
-    folderName = fullfile(dataPath,subjectName,gridType,expDate,protocolName);
+function [allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos,param)
 
-    % Get good electrodes
-    rfData = load([subjectName gridType 'RFData.mat']);
-    goodElectrodes = rfData.highRMSElectrodes;
-    goodElectrodes = goodElectrodes(goodElectrodes<=81); % Only microelectrodes
-    numGoodElectrodes = length(goodElectrodes);
+if ~exist('param','var');       param = 'sf';                           end
 
-    % Get good trials
-    parameters = load(fullfile(folderName,'extractedData','parameterCombinations.mat'));
-    t = load(fullfile(folderName,'segmentedData','LFP','lfpInfo.mat'));
-    timeVals = t.timeVals;
+folderName = fullfile(dataPath,subjectName,gridType,expDate,protocolName);
 
-    badTrials = load(fullfile(folderName,'segmentedData','badTrials.mat'));
-    badTrials = badTrials.badTrials;
-    goodPos = setdiff(parameters.parameterCombinations{1,1,sizePos,1,orientation},badTrials);
+% Get good electrodes
+rfData = load([subjectName gridType 'RFData.mat']);
+goodElectrodes = rfData.highRMSElectrodes;
+goodElectrodes = goodElectrodes(goodElectrodes<=81); % Only microelectrodes
+numGoodElectrodes = length(goodElectrodes);
 
-    allData = zeros(numGoodElectrodes,length(goodPos),length(timeVals));
+% Get good trials
+parameters = load(fullfile(folderName,'extractedData','parameterCombinations.mat'));
+t = load(fullfile(folderName,'segmentedData','LFP','lfpInfo.mat'));
+timeVals = t.timeVals;
 
-    if req==1
-        dataReq = 'lfpMPGamma';
-    elseif req==2
-        dataReq = 'lfpMPSlowGamma';
-    elseif req==3
-        dataReq = 'lfpMPFastGamma';
-    else
-        dataReq = 'LFP';
-    end
-    for i=1:numGoodElectrodes
-        lfpData = load(fullfile(folderName,'segmentedData',dataReq,['elec' num2str(goodElectrodes(i)) '.mat']));
-        allData(i,:,:) = lfpData.analogData(goodPos,:);
-    end
+badTrials = load(fullfile(folderName,'segmentedData','badTrials.mat'));
+badTrials = badTrials.badTrials;
+if strcmp(param,'sf')
+    goodPos = setdiff(parameters.parameterCombinations{1,1,1,sPos,oriPos},badTrials);
+elseif strcmp(param,'size')
+    goodPos = setdiff(parameters.parameterCombinations{1,1,sPos,1,oriPos},badTrials);
+end
+
+allData = zeros(numGoodElectrodes,length(goodPos),length(timeVals));
+
+for i=1:numGoodElectrodes
+    lfpData = load(fullfile(folderName,'segmentedData','LFP',['elec' num2str(goodElectrodes(i)) '.mat']));
+    allData(i,:,:) = lfpData.analogData(goodPos,:);
+end
 end

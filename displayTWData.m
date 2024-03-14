@@ -1,141 +1,142 @@
-function displayTWData(subjectName,expDate,protocolName,dataPath,sizePos,orientation,selectedElectrodes,TSreq)
+% Analysis Method
+
+% Four analyses are done: 1) TF spectrum, 2) filtering the signals in
+% prespecified frequency bands, 3) finding epochs where bursts are detected
+% and 4) traveling wave characteristics
+
+% "hilbert" method involves using Multi-taper, traditional filtering and Hilbert transform for analyses 1-3
+% "Matching Pursuit" method involves using MP for TF spectrum, reconstructing the
+% signal within a pre-specified band by using atoms with centre frequencies
+% within tha band, and doing burst estimation using MP as well.
+
+% Burst characteristics need to be calculated for all trials
+% simultaneously. To find common time epochs where traveling waves are
+% found, this analysis needs to be done for all electrodes also. These
+% analyses are therefore done upfront even though results are shown only
+% for some electrodes and trials.
+
+function displayTWData(subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList)
 
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;
-backgroundColor = 'w'; panelHeight = 0.1;
+backgroundColor = 'w'; panelHeight = 0.125;
 gridType = 'Microelectrode';
 
+numFrequencyRanges = length(freqRangeList);
+colorNamesFreqRanges = gray(numFrequencyRanges+1);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-disp('Getting all data...');
-[allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sizePos,orientation,TSreq);
+disp('Getting data...');
+[allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
+numGoodElectrodes = length(goodElectrodes);
+
+%%%%%%%%%%%%%%%%%%%%%%% Do burst estimation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+thresholdFactor = 1;
+baselinePeriodS = [-0.5 0];
+stimulusPeriodS = [0.25 0.75];
+filterOrder = 4;
+
+disp('Performing burst analysis...');
+burstTS = cell(numFrequencyRanges,numGoodElectrodes);
+filteredSignal = cell(numFrequencyRanges,numGoodElectrodes);
+if strcmp(analysisMethod,'hilbert')
+    for iFreq=1:numFrequencyRanges
+        for iElec=1:numGoodElectrodes
+            [~,~,~,burstTS{iFreq,iElec},filteredSignal{iFreq,iElec}] = getHilbertBurst(squeeze(allData(iElec,:,:)),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeList{iFreq},filterOrder,1);
+        end
+    end
+else
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%% Plot RF information %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hGridPlots = getPlotHandles(4,1,[0.025 0.05 0.1 0.8],0.025,0.05,0);
+hGridPlots = getPlotHandles(3,2,[0.025 0.05 0.225 0.8],0.025,0.05,0);
 numSelectedElectrodes = length(selectedElectrodes);
-colorNames = jet(numSelectedElectrodes);
-showRFPositionsSelectedElectrodes(hGridPlots,goodElectrodes,selectedElectrodes,rfData,parameters,colorNames);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Filtering %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hPanel1 = uipanel('Title','Filtering','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.025 1-panelHeight 0.175 panelHeight]);
-
-% Frequency Range
-freqRange0 = [25 75]; 
-uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0 0.5 0.5 0.5],'Style','text','String','Freq Range (Hz)','FontSize',fontSizeMedium);
-hFreqRangeMin = uicontrol('Parent',hPanel1,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 0.5 0.25 0.5], ...
-    'Style','edit','String',num2str(freqRange0(1)),'FontSize',fontSizeSmall);
-hFreqRangeMax = uicontrol('Parent',hPanel1,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 0.5 0.25 0.5], ...
-    'Style','edit','String',num2str(freqRange0(2)),'FontSize',fontSizeSmall);
-
-% Method
-uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0 0 0.5 0.5],'Style','text','String','Burst Detection Method','FontSize',fontSizeMedium);
-methodList = {'Hilbert','Matching Pursuit'};
-hMethod = uicontrol('Parent',hPanel1,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 0 0.5 0.5],'Style','popup','String',methodList,'FontSize',fontSizeMedium);
+colorNamesElectrodes = jet(numSelectedElectrodes);
+showRFPositionsSelectedElectrodes(hGridPlots(1,:),goodElectrodes,selectedElectrodes,rfData,parameters,colorNamesElectrodes);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%  Data selection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hPanel2 = uipanel('Title','Data','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.2 1-panelHeight 0.2 panelHeight]);
+hPanel1 = uipanel('Title','Data','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0 1-panelHeight 0.2 panelHeight]);
 
 % Selected electrodes
-uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0 0.5 0.25 0.5],'Style','text','String','Elecs','FontSize',fontSizeMedium);
-hElectrodes = uicontrol('Parent',hPanel2,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.25 0.5 0.75 0.5],'Style','edit','String',num2str(selectedElectrodes),'FontSize',fontSizeMedium);
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0 0.5 0.25 0.5],'Style','text','String','Elecs','FontSize',fontSizeMedium);
+hElectrodes = uicontrol('Parent',hPanel1,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.25 0.5 0.75 0.5],'Style','edit','String',num2str(selectedElectrodes),'FontSize',fontSizeMedium);
 
 % Trial Number
 numTrials = size(allData,2);
-uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0 0 0.25 0.5],'Style','text','String','TrialNum','FontSize',fontSizeMedium);
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0 0 0.25 0.5],'Style','text','String','TrialNum','FontSize',fontSizeMedium);
 trialNumList = 1:numTrials;
-hTrial = uicontrol('Parent',hPanel2,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.25 0 0.15 0.5],'Style','popup','String',trialNumList,'FontSize',fontSizeMedium);
+hTrial = uicontrol('Parent',hPanel1,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.25 0 0.15 0.5],'Style','popup','String',trialNumList,'FontSize',fontSizeMedium);
 
 % Plot data
-uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0.4 0 0.2 0.5],'Style','pushbutton','String','plot','FontSize',fontSizeMedium,'Callback',{@plot_Callback});
-uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0.6 0 0.2 0.5],'Style','pushbutton','String','Rescale','FontSize',fontSizeMedium,'Callback',{@rescale_Callback});
-uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0.8 0 0.2 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeMedium,'Callback',{@cla_Callback});
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.4 0 0.2 0.5],'Style','pushbutton','String','plot','FontSize',fontSizeMedium,'Callback',{@plot_Callback});
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.6 0 0.2 0.5],'Style','pushbutton','String','Rescale','FontSize',fontSizeMedium,'Callback',{@rescale_Callback});
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.8 0 0.2 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeMedium,'Callback',{@cla_Callback});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Axis Ranges %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hPanel3 = uipanel('Title','AxisRanges1','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.4 1-panelHeight 0.15 panelHeight]);
+hPanel2 = uipanel('Title','AxisRanges1','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.2 1-panelHeight 0.2 panelHeight]);
 axisRange1List0{1} = [0 100]; axisRange1Name{1} = 'FreqLims (Hz)';
 axisRange1List0{2} = [-0.5 1]; axisRange1Name{2} = 'TimeLims (S)';
+axisRange1List0{3} = [-2 2]; axisRange1Name{3} = 'cLims (raw)';
 
 numAxisRanges1 = length(axisRange1List0);
 hAxisRange1Min = cell(1,numAxisRanges1);
 hAxisRange1Max = cell(1,numAxisRanges1);
 
 for ii=1:numAxisRanges1
-    uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 1-ii/numAxisRanges1 0.5 1/numAxisRanges1],'Style','text','String',axisRange1Name{ii},'FontSize',fontSizeSmall);
-    hAxisRange1Min{ii} = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 1-ii/numAxisRanges1 0.25 1/numAxisRanges1], ...
-    'Style','edit','String',num2str(axisRange1List0{ii}(1)),'FontSize',fontSizeSmall);
-    hAxisRange1Max{ii} = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 1-ii/numAxisRanges1 0.25 1/numAxisRanges1], ...
-    'Style','edit','String',num2str(axisRange1List0{ii}(2)),'FontSize',fontSizeSmall);
+    uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0 1-ii/numAxisRanges1 0.5 1/numAxisRanges1],'Style','text','String',axisRange1Name{ii},'FontSize',fontSizeSmall);
+    hAxisRange1Min{ii} = uicontrol('Parent',hPanel2,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 1-ii/numAxisRanges1 0.25 1/numAxisRanges1], ...
+        'Style','edit','String',num2str(axisRange1List0{ii}(1)),'FontSize',fontSizeSmall);
+    hAxisRange1Max{ii} = uicontrol('Parent',hPanel2,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 1-ii/numAxisRanges1 0.25 1/numAxisRanges1], ...
+        'Style','edit','String',num2str(axisRange1List0{ii}(2)),'FontSize',fontSizeSmall);
 end
 
-hPanel4 = uipanel('Title','AxisRanges2','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.55 1-panelHeight 0.15 panelHeight]);
-axisRange2List0{1} = [-100 100]; axisRange2Name{1} = 'YRange (S)';
-axisRange2List0{2} = [-1.5 1.5]; axisRange2Name{2} = 'cLims (topo)';
+hPanel3 = uipanel('Title','AxisRanges2','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.4 1-panelHeight 0.2 panelHeight]);
 
-numAxisRanges2 = length(axisRange2List0);
-hAxisRange2Min = cell(1,numAxisRanges2);
-hAxisRange2Max = cell(1,numAxisRanges2);
-
-for ii=1:numAxisRanges2
-    uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 1-ii/numAxisRanges2 0.5 1/numAxisRanges2],'Style','text','String',axisRange2Name{ii},'FontSize',fontSizeSmall);
-    hAxisRange2Min{ii} = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 1-ii/numAxisRanges2 0.25 1/numAxisRanges2], ...
-    'Style','edit','String',num2str(axisRange2List0{ii}(1)),'FontSize',fontSizeSmall);
-    hAxisRange2Max{ii} = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 1-ii/numAxisRanges2 0.25 1/numAxisRanges2], ...
-    'Style','edit','String',num2str(axisRange2List0{ii}(2)),'FontSize',fontSizeSmall);
+axisRange2List0 = cell(1,numFrequencyRanges);
+axisRange2Name = cell(1,numFrequencyRanges);
+for iFreq=1:numFrequencyRanges
+    axisRange2List0{iFreq} = [-100 100]; 
+    axisRange2Name{iFreq} = ['yRange (' num2str(freqRangeList{iFreq}(1)) '-' num2str(freqRangeList{iFreq}(2)) ' Hz)'];
 end
 
+hAxisRange2Min = cell(1,numFrequencyRanges);
+hAxisRange2Max = cell(1,numFrequencyRanges);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%  Phase propagation plot panel %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hPanel5 = uipanel('Title','Plot Phase Propagation','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.70 1-panelHeight 0.2 panelHeight]);
+for ii=1:numFrequencyRanges
+    uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 1-ii/numFrequencyRanges 0.5 1/numFrequencyRanges],'Style','text','String',axisRange2Name{ii},'FontSize',fontSizeSmall);
+    hAxisRange2Min{ii} = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 1-ii/numFrequencyRanges 0.25 1/numFrequencyRanges], ...
+        'Style','edit','String',num2str(axisRange2List0{ii}(1)),'FontSize',fontSizeSmall);
+    hAxisRange2Max{ii} = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 1-ii/numFrequencyRanges 0.25 1/numFrequencyRanges], ...
+        'Style','edit','String',num2str(axisRange2List0{ii}(2)),'FontSize',fontSizeSmall);
+end
 
-timeRangeprop0 = [-0.5 1]; 
-uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0 0.5 0.5 0.5],'Style','text','String','Time Range (s)','FontSize',fontSizeMedium);
-hTimeRangePropMin = uicontrol('Parent',hPanel5,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 0.5 0.25 0.5], ...
+%%%%%%%%%%%%%%%%%%%%  Phase propagation plot panel %%%%%%%%%%%%%%%%%%%%%%%%
+hPanel4 = uipanel('Title','Plot Phase Propagation','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.6 1-panelHeight 0.2 panelHeight]);
+
+timeRangeprop0 = [-0.5 1];
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0.5 0.5 0.5],'Style','text','String','Time Range (s)','FontSize',fontSizeMedium);
+hTimeRangePropMin = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.5 0.5 0.25 0.5], ...
     'Style','edit','String',num2str(timeRangeprop0(1)),'FontSize',fontSizeSmall);
-hTimeRangePropMax = uicontrol('Parent',hPanel5,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 0.5 0.25 0.5], ...
+hTimeRangePropMax = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 0.5 0.25 0.5], ...
     'Style','edit','String',num2str(timeRangeprop0(2)),'FontSize',fontSizeSmall);
 
-plotToggle = uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0.4 0 0.4 0.5],'Style','togglebutton','String','Plot/Pause','FontSize',fontSizeMedium,'Callback',{@plot_Callback2},'Value',0);
-uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0.8 0 0.2 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeMedium,'Callback',{@cla_Callback2});
-
-plotList = {'Phase Coherence','Burst locs'};
-hPlotSelect = uicontrol('Parent',hPanel5,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0 0 0.4 0.5],'Style','popup','String',plotList,'FontSize',fontSizeMedium);
+plotToggle = uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0 0.5 0.5],'Style','togglebutton','String','Plot/Pause','FontSize',fontSizeMedium,'Callback',{@plot_Callback2},'Value',0);
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.5 0 0.5 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeMedium,'Callback',{@cla_Callback2});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Plot handles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hTFAllTrials = getPlotHandles(numSelectedElectrodes,1,[0.15 0.05 0.1 0.8]);
-hTFSingleTrial = getPlotHandles(numSelectedElectrodes,1,[0.275 0.05 0.25 0.8]);
-hSignalSingleTrial = getPlotHandles(numSelectedElectrodes,1,[0.55 0.05 0.25 0.8]);
-hStatsGrid = getPlotHandles(2,1,[0.825 0.05 0.15 0.8],0.05,0.05);
+hTFAllTrials = getPlotHandles(numSelectedElectrodes,1,[0.275 0.05 0.1 0.8]);
+hTFSingleTrial = getPlotHandles(numSelectedElectrodes,1,[0.4 0.05 0.15 0.8]);
+hSignalSingleTrial = getPlotHandles(numSelectedElectrodes,numFrequencyRanges,[0.575 0.05 0.25 0.8]);
+hBurstsAllElectrodes = getPlotHandles(numFrequencyRanges,1,[0.85 0.05 0.125 0.8],0.05,0.05);
 
-%%%%%%%%%% Parameters for burst calculation, hardcoded for now %%%%%%%%%%%%
-filterOrder = 4; 
-thresholdFactor = 1;
-baselinePeriodS = [-0.5 0]; 
-stimulusPeriodS = [0.25 0.75];
-fRange = [0 100]; cLims = [-25 25]; timeRange = [-0.5 1];
-freqRangeHz = [str2double(get(hFreqRangeMin,'String')) str2double(get(hFreqRangeMax,'String'))];
-trialNum = trialNumList((get(hTrial,'val')));
-disp('Calculating TW parameters')
-[outputs] = getTWCircParams(squeeze(allData(:,trialNum,:)),timeVals,goodElectrodes,freqRangeHz,0,[]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Callbacks %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function plot_Callback(~,~)
-
-        % Filtering options
-        freqRangeHz = [str2double(get(hFreqRangeMin,'String')) str2double(get(hFreqRangeMax,'String'))];
-        burstMethod = get(hMethod,'val');
-        trialNum = trialNumList((get(hTrial,'val')));
-        Fs = 2000;
-        
-        % Tf options
-        movingwin = [0.25 0.025];
-        params.tapers   = [1 1];
-        params.pad      = -1;
-        params.Fs       = Fs;
-        params.trialave = 0; %averaging across trials
-        blRange = [-0.5 0]; 
 
         % Data choices
         selectedElectrodes0 = str2num(get(hElectrodes,'String')); %#ok<ST2NM>
         trialNum = trialNumList((get(hTrial,'val')));
 
         if ~isequal(selectedElectrodes0,selectedElectrodes)
-            showRFPositionsSelectedElectrodes(hGridPlots,goodElectrodes,selectedElectrodes0,rfData,parameters,colorNames);
+            showRFPositionsSelectedElectrodes(hGridPlots(1,:),goodElectrodes,selectedElectrodes0,rfData,parameters,colorNamesElectrodes);
             selectedElectrodes = selectedElectrodes0;
         end
 
@@ -144,204 +145,152 @@ disp('Calculating TW parameters')
         for i=1:numAxisRanges1
             axisRange1List{i} = [str2double(get(hAxisRange1Min{i},'String')) str2double(get(hAxisRange1Max{i},'String'))];
         end
-        axisRange2List = cell(1,numAxisRanges2);
-        for i=1:numAxisRanges2
+        axisRange2List = cell(1,numFrequencyRanges);
+        for i=1:numFrequencyRanges
             axisRange2List{i} = [str2double(get(hAxisRange2Min{i},'String')) str2double(get(hAxisRange2Max{i},'String'))];
         end
-      
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%% Plot data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for i=1:numSelectedElectrodes
-            signalAllTrials = squeeze(allData(selectedElectrodes(i),:,:));
-            
-            %burst detection
-            if burstMethod==1
-                [~,~,~,burstTS,bpfSignalAllTrials,~] = getHilbertBurst(signalAllTrials(trialNum,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeHz,filterOrder,1);
-            else 
-                gaborPath = fullfile(dataPath,subjectName,gridType,expDate,protocolName,'mpAnalysis',['elec',num2str(selectedElectrodes(i))]);
+            ePos = find(selectedElectrodes(i)==goodElectrodes);
+            signalAllTrials = squeeze(allData(ePos,:,:));
+
+            if strcmp(analysisMethod,'hilbert') % Use Multi-taper method
+                plotTFMT(hTFAllTrials(i),signalAllTrials,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw'); % Time-frequency power spectrum for all trials
+                plotTFMT(hTFSingleTrial(i),squeeze(signalAllTrials(trialNum,:)),timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw');
+                hold(hTFSingleTrial(i),'on');
+            else
+                plotTFMP(hTFAllTrials(i),subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos,selectedElectrodes(i),timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges); % Write this code - this data should be saved somewhere
+            end
+
+            % Plot filtered signal and show bursts
+            for j=1:numFrequencyRanges
+                plot(hSignalSingleTrial(i,j),timeVals,filteredSignal{j,ePos}(trialNum,:),'color',colorNamesFreqRanges(j,:));
+                hold(hSignalSingleTrial(i,j),'on');
+                plot(hSignalSingleTrial(i,j),timeVals,burstTS{j,ePos}(trialNum,:)-1,'color','r','linewidth',2);
+                axis(hSignalSingleTrial(i,j),[axisRange1List{2} axisRange2List{j}]);
+
+                plot(hTFSingleTrial(i),timeVals, mean(freqRangeList{j})+ burstTS{j,ePos}(trialNum,:)-1,'color',colorNamesFreqRanges(j,:),'linewidth',2);
+            end
+        end
+
+        % plot bursts for all electrodes
+        for i=1:numFrequencyRanges
+            for j=1:numGoodElectrodes
+                plot(hBurstsAllElectrodes(i),timeVals,j+burstTS{i,j}(trialNum,:)-1,'color','r','linewidth',1);
+                hold(hBurstsAllElectrodes(i),'on');
+            end
+            xlim(hBurstsAllElectrodes(i),axisRange1List{2});
+        end
+        % % Plot pgd values with significance
+        % plot(hStatsGrid(1),timeVals,outputs.pgd,'LineWidth',2)
+        % xlim(hStatsGrid(1),timeRange);
+    end
+
+    function plot_Callback2(~,~)
+        % Data choices
+        % Filtering options
+        freqRangeHz = [str2double(get(hFreqRangeMin,'String')) str2double(get(hFreqRangeMax,'String'))];
+        trialNum = trialNumList((get(hTrial,'val')));
+        timeRangeProp = [str2double(get(hTimeRangePropMin,'String')) str2double(get(hTimeRangePropMax,'String'))];
+        timeRangeProp = dsearchn(timeVals',timeRangeProp(1)):dsearchn(timeVals',timeRangeProp(2));
+
+        %plot options
+        addPlots = get(hPlotSelect,'val');
+
+        % Axis Ranges
+        axisRange1List = cell(1,numAxisRanges1);
+        for i=1:numAxisRanges1
+            axisRange1List{i} = [str2double(get(hAxisRange1Min{i},'String')) str2double(get(hAxisRange1Max{i},'String'))];
+        end
+        axisRange2List = cell(1,numFrequencyRanges);
+        for i=1:numFrequencyRanges
+            axisRange2List{i} = [str2double(get(hAxisRange2Min{i},'String')) str2double(get(hAxisRange2Max{i},'String'))];
+        end
+
+        direction = outputs.direction;
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%% Plot data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %get phi and amp grid
+        [ampGrid,phiGrid,mag] = getHilbertTransData(allData(:,trialNum,:),goodElectrodes);
+        [X,Y] = meshgrid(1:1:9);
+
+        %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%
+        xlineP1 = [];xlineP2 = [];xlineP3 = [];xlineP4 = [];xlineP5 = [];xlineP6 = [];xlineMag = [];xlinepgd = [];
+
+        %plot phase coherence
+        if addPlots==1
+            plot(hStatsGrid(2),timeVals,mag,'LineWidth',1)
+        else
+            for gaborInd = 1:numel(goodElectrodes)
+                elec = goodElectrodes(gaborInd);
+                gaborPath = fullfile(dataPath,subjectName,gridType,expDate,protocolName,'mpAnalysis',[elec,num2str(selectedElectrodes(i))]);
+                signalAllTrials = squeeze(allData(gaborInd,:,:));
                 if ~exist(gaborPath,'file')
                     disp('Execute RunMP to run matching pursuit')
                 else
+                    %                       gammaAtom = zeros(1,length(goodElectrodes));
+                    burstTS = nan(length(goodElectrodes),length(timeVals));
+                    sigBursts = zeros(length(goodElectrodes),3);
                     load(gaborPath)
                     gaborInfo = gaborInfo(trialNum,:,:);
                     header = header(trialNum,:);
-                    
+
                     %initialize params for MP
                     thresholdFraction=0.5;
                     diffPower = getChangeInPower(signalAllTrials,timeVals,stimulusPeriodS,baselinePeriodS,freqRangeHz);
                     thresholdFactor = diffPower*thresholdFraction;
-                    [lengthList,freqList,timeList,~,~,~] = getBurstLengthMP(signalAllTrials(trialNum,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeHz,[],[],[],gaborInfo(trialNum,:,:),header(trialNum,:));
+                    [lengthList,freqList,timeList,~,~,~] = getBurstLengthMP(signalAllTrials(trialNum,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeHz,[],[],[],gaborInfo,header);
                     if ~isempty(lengthList)
-                        [~, sigBursts, ~, ~] = gammaBurstMPParams(lengthList,timeList,freqList,squeeze(gaborInfo),timeVals);
+                        [~,sigBursts(gaborInd,:),burstTS(gaborInd,:), ~] = gammaBurstMPParams(lengthList,timeList,freqList,squeeze(gaborInfo),timeVals);
                     end
                 end
             end
-                                 
-            %time frequency analysis with multitapers
-            [S,timeTF,freqVals] = mtspecgramc(signalAllTrials',movingwin,params);
-            xValToPlot = timeTF+timeVals(1)-1/Fs;
-            TFPow = log10(abs(S).^2); 
-            blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
-            blPower = mean(TFPow(blPos,:,:),1);
-            logSBL = repmat(blPower,length(xValToPlot),1);
-            corrPowA = 10*(mean(TFPow,3)-mean(logSBL,3));
-            corrPowS = 10*(TFPow(:,:,trialNum)-logSBL(:,:,trialNum));
-
-            %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%  
-            %plot the burst
-            
-            if burstMethod==1
-               %Uncomment to plot the power time series 
-%               plot(hSignalSingleTrial(i),timeVals,zscore(hilbertPowerAllTrials),'color',colorNames(i,:),'linewidth',0.5);
-%               hold(hSignalSingleTrial(i),'on'); 
-                plot(hSignalSingleTrial(i),timeVals,bpfSignalAllTrials,'color',colorNames(i,:),'linewidth',2);
-                hold(hSignalSingleTrial(i),'on');
-                plot(hSignalSingleTrial(i),timeVals,burstTS,'color','k','linewidth',2);
-                hold(hSignalSingleTrial(i),'off');
-            else 
-                E = mp2tf(squeeze(gaborInfo),header);
-                pcolor(hSignalSingleTrial(i),timeVals,freqVals,log10(E));
-%                caxis(cLims);
-                shading interp;        
-                hold(hSignalSingleTrial(i),'on');
-                xline(hSignalSingleTrial(i),stimulusPeriodS(1),'color','k');
-                hold(hSignalSingleTrial(i),'on');
-                xline(hSignalSingleTrial(i),stimulusPeriodS(2),'color','k');
-                hold(hSignalSingleTrial(i),'on');
-                yline(hSignalSingleTrial(i),freqRangeHz(1),'color','k');
-                hold(hSignalSingleTrial(i),'on');
-                yline(hSignalSingleTrial(i),freqRangeHz(2),'color','k');
-                hold(hSignalSingleTrial(i),'on');
-                if ~isempty(lengthList)
-                    tmpList = intersect(find(timeVals>=(sigBursts(2)-(sigBursts(1))/2)),find(timeVals<= (sigBursts(2)-(sigBursts(1))/2)));
-                    plot(hSignalSingleTrial(i),sigBursts(2),sigBursts(3),'color','k','marker','o','markersize',4);
-                    hold(hSignalSingleTrial(i),'on');
-                    plot(timeVals(tmpList),zeros(1,length(tmpList))+freqList{i}(k),'color','k','linewidth',1);
-                end    
-            end
-            
-            % plot TF single trial
-            pcolor(hTFSingleTrial(i),xValToPlot,freqVals,corrPowS');
-            shading(hTFSingleTrial(i),'interp');
-            colormap(hTFSingleTrial(i), 'jet')
-            axis(hTFSingleTrial(i),[timeRange fRange]);
-            caxis(hTFSingleTrial(i),[-10 25]);
-            
-            % plot TF all trial
-            pcolor(hTFAllTrials(i),xValToPlot,freqVals,corrPowA');
-            shading(hTFAllTrials(i),'interp');
-            colormap(hTFAllTrials(i), 'jet')        
-            axis(hTFAllTrials(i),[timeRange fRange]);
-             caxis(hTFAllTrials(i),[-10 25]);
-        end
-         % Plot pgd values with significance
-         plot(hStatsGrid(1),timeVals,outputs.pgd,'LineWidth',2)
-         xlim(hStatsGrid(1),timeRange);       
-    end
-
-   function plot_Callback2(~,~)
-         % Data choices  
-         % Filtering options
-         freqRangeHz = [str2double(get(hFreqRangeMin,'String')) str2double(get(hFreqRangeMax,'String'))];        
-         trialNum = trialNumList((get(hTrial,'val')));
-         timeRangeProp = [str2double(get(hTimeRangePropMin,'String')) str2double(get(hTimeRangePropMax,'String'))];
-         timeRangeProp = dsearchn(timeVals',timeRangeProp(1)):dsearchn(timeVals',timeRangeProp(2));
-         
-         %plot options
-         addPlots = get(hPlotSelect,'val');
-         
-         % Axis Ranges
-         axisRange1List = cell(1,numAxisRanges1);
-         for i=1:numAxisRanges1
-            axisRange1List{i} = [str2double(get(hAxisRange1Min{i},'String')) str2double(get(hAxisRange1Max{i},'String'))];
-         end
-         axisRange2List = cell(1,numAxisRanges2);
-         for i=1:numAxisRanges2
-            axisRange2List{i} = [str2double(get(hAxisRange2Min{i},'String')) str2double(get(hAxisRange2Max{i},'String'))];
-         end
-         
-         direction = outputs.direction;
-         
-         %%%%%%%%%%%%%%%%%%%%%%%%%%% Plot data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%                        
-         %get phi and amp grid
-         [ampGrid,phiGrid,mag] = getHilbertTransData(allData(:,trialNum,:),goodElectrodes);
-         [X,Y] = meshgrid(1:1:9);
-         
-         %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%
-         xlineP1 = [];xlineP2 = [];xlineP3 = [];xlineP4 = [];xlineP5 = [];xlineP6 = [];xlineMag = [];xlinepgd = [];
-             
-         %plot phase coherence    
-            if addPlots==1
-                 plot(hStatsGrid(2),timeVals,mag,'LineWidth',1)
-            else 
-                for gaborInd = 1:numel(goodElectrodes)
-                    elec = goodElectrodes(gaborInd);
-                    gaborPath = fullfile(dataPath,subjectName,gridType,expDate,protocolName,'mpAnalysis',[elec,num2str(selectedElectrodes(i))]);
-                    signalAllTrials = squeeze(allData(gaborInd,:,:));
-                    if ~exist(gaborPath,'file')
-                        disp('Execute RunMP to run matching pursuit')
-                    else
-%                       gammaAtom = zeros(1,length(goodElectrodes));
-                        burstTS = nan(length(goodElectrodes),length(timeVals));
-                        sigBursts = zeros(length(goodElectrodes),3);
-                        load(gaborPath)
-                        gaborInfo = gaborInfo(trialNum,:,:);
-                        header = header(trialNum,:);
-                        
-                        %initialize params for MP
-                        thresholdFraction=0.5;
-                        diffPower = getChangeInPower(signalAllTrials,timeVals,stimulusPeriodS,baselinePeriodS,freqRangeHz);
-                        thresholdFactor = diffPower*thresholdFraction;
-                        [lengthList,freqList,timeList,~,~,~] = getBurstLengthMP(signalAllTrials(trialNum,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeHz,[],[],[],gaborInfo,header);
-                        if ~isempty(lengthList)
-                            [~,sigBursts(gaborInd,:),burstTS(gaborInd,:), ~] = gammaBurstMPParams(lengthList,timeList,freqList,squeeze(gaborInfo),timeVals);  
-                        end
-                    end
-                end
-                burstTS = burstTS+(1:numel(goodElectrodes))';
-                plot(hStatsGrid(2),timeVals,burstTS,'.','LineWidth',1.2,'Color','black')
+            burstTS = burstTS+(1:numel(goodElectrodes))';
+            plot(hStatsGrid(2),timeVals,burstTS,'.','LineWidth',1.2,'Color','black')
+            hold(hStatsGrid(2),'on')
+            for ploti = 1:numel(goodElectrodes)
+                plot(hStatsGrid(2),sigBursts(2),ploti,'o')
                 hold(hStatsGrid(2),'on')
-                for ploti = 1:numel(goodElectrodes)
-                    plot(hStatsGrid(2),sigBursts(2),ploti,'o')
-                    hold(hStatsGrid(2),'on')
-                end
             end
-            
-         if get(plotToggle, 'Value') == 1    
-             for ind = 1:numel(timeRangeProp)
-                 delete(xlineP1);delete(xlineP2);delete(xlineP3);delete(xlineP4);delete(xlineP5);delete(xlineP6);delete(xlineMag);delete(xlinepgd);
-                 xlineP1 = xline(hSignalSingleTrial(1),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                 xlineP2 = xline(hSignalSingleTrial(2),timeVals(timeRangeProp(ind)),'LineWidth',2); 
-                 xlineP3 = xline(hSignalSingleTrial(3),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                 xlineP4 = xline(hSignalSingleTrial(4),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                 xlineP5 = xline(hSignalSingleTrial(5),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                 xlineP6 = xline(hSignalSingleTrial(6),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                 xlineMag = xline(hStatsGrid(2), timeVals(timeRangeProp(ind)),'LineWidth',2);
-                 xlinepgd = xline(hStatsGrid(1), timeVals(timeRangeProp(ind)),'LineWidth',2);
-                 xlim(hStatsGrid(2),axisRange1List{2});
-                    
-                 %plot amp propagation plots 
-                 imagesc(ampGrid(:,:,timeRangeProp(ind)),'parent',hGridPlots(3))
-                 caxis(hGridPlots(3),[min(ampGrid(:,:,timeRangeProp(1):timeRangeProp(end)),[],'all'),max(ampGrid(:,:,timeRangeProp(1):timeRangeProp(end)),[],'all')])
-                 hold(hGridPlots(3),'on')
-                 directions = repmat(direction(timeRangeProp(ind)),size(phiGrid,1),size(phiGrid,2));
-                 U = real(exp(1i*directions)); 
-                 V = imag(exp(1i*directions));
-                 quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots(3))
-                 hold(hGridPlots(3),'off')
-                    
-                 %plot phase propagation plots
-                 imagesc(cos(phiGrid(:,:,timeRangeProp(ind))),'parent',hGridPlots(4))
-                 caxis(hGridPlots(4),[min(cos(phiGrid(:,:,timeRangeProp(1):timeRangeProp(end))),[],'all'),max(cos(phiGrid(:,:,timeRangeProp(1):timeRangeProp(end))),[],'all')])
-                 hold(hGridPlots(4),'on')
-                 directions = repmat(direction(timeRangeProp(ind)),size(phiGrid,1),size(phiGrid,2));
-                 U = real(exp(1i*directions)); 
-                 V = imag(exp(1i*directions));
-                 quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots(4))
-                 hold(hGridPlots(4),'off')
-                 drawnow
-             end 
+        end
+
+        if get(plotToggle, 'Value') == 1
+            for ind = 1:numel(timeRangeProp)
+                delete(xlineP1);delete(xlineP2);delete(xlineP3);delete(xlineP4);delete(xlineP5);delete(xlineP6);delete(xlineMag);delete(xlinepgd);
+                xlineP1 = xline(hSignalSingleTrial(1),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP2 = xline(hSignalSingleTrial(2),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP3 = xline(hSignalSingleTrial(3),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP4 = xline(hSignalSingleTrial(4),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP5 = xline(hSignalSingleTrial(5),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP6 = xline(hSignalSingleTrial(6),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineMag = xline(hStatsGrid(2), timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlinepgd = xline(hStatsGrid(1), timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlim(hStatsGrid(2),axisRange1List{2});
+
+                %plot amp propagation plots
+                imagesc(ampGrid(:,:,timeRangeProp(ind)),'parent',hGridPlots(3))
+                caxis(hGridPlots(3),[min(ampGrid(:,:,timeRangeProp(1):timeRangeProp(end)),[],'all'),max(ampGrid(:,:,timeRangeProp(1):timeRangeProp(end)),[],'all')])
+                hold(hGridPlots(3),'on')
+                directions = repmat(direction(timeRangeProp(ind)),size(phiGrid,1),size(phiGrid,2));
+                U = real(exp(1i*directions));
+                V = imag(exp(1i*directions));
+                quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots(3))
+                hold(hGridPlots(3),'off')
+
+                %plot phase propagation plots
+                imagesc(cos(phiGrid(:,:,timeRangeProp(ind))),'parent',hGridPlots(4))
+                caxis(hGridPlots(4),[min(cos(phiGrid(:,:,timeRangeProp(1):timeRangeProp(end))),[],'all'),max(cos(phiGrid(:,:,timeRangeProp(1):timeRangeProp(end))),[],'all')])
+                hold(hGridPlots(4),'on')
+                directions = repmat(direction(timeRangeProp(ind)),size(phiGrid,1),size(phiGrid,2));
+                U = real(exp(1i*directions));
+                V = imag(exp(1i*directions));
+                quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots(4))
+                hold(hGridPlots(4),'off')
+                drawnow
+            end
         else
-                uiwait
+            uiwait
         end
     end
 
@@ -350,8 +299,8 @@ disp('Calculating TW parameters')
         claGivenPlotHandle(hTFAllTrials);
         claGivenPlotHandle(hTFSingleTrial);
         claGivenPlotHandle(hSignalSingleTrial);
-        claGivenPlotHandle(hStatsGrid);
-        cla(hStatsGrid(1))
+        claGivenPlotHandle(hBurstsAllElectrodes);
+
         function claGivenPlotHandle(plotHandles)
             [numRows,numCols] = size(plotHandles);
             for i=1:numRows
@@ -373,27 +322,27 @@ disp('Calculating TW parameters')
         % Rescale TF plots
         rescaleGivenPlotHandle(hTFAllTrials,[timeLims freqLims]);
         rescaleGivenPlotHandle(hTFSingleTrial,[timeLims freqLims]);
-        
+
         rescaleZGivenPlotHandle(hTFAllTrials,cLims);
         rescaleZGivenPlotHandle(hTFSingleTrial,cLims);
 
         % Rescale stats plots
-         xlim(hStatsGrid(1),timeLims);
-         xlim(hStatsGrid(2),timeLims);               
+        xlim(hStatsGrid(1),timeLims);
+        xlim(hStatsGrid(2),timeLims);
     end
 
     function rescaleZGivenPlotHandle(plotHandles,cLims)
-            [numRows,numCols] = size(plotHandles);
-            for i=1:numRows
-                for j=1:numCols
-                    caxis(plotHandles(i,j),cLims);
-                end
+        [numRows,numCols] = size(plotHandles);
+        for i=1:numRows
+            for j=1:numCols
+                caxis(plotHandles(i,j),cLims);
             end
-       end
+        end
+    end
 
- 
 
-    function cla_Callback2(~,~)     
+
+    function cla_Callback2(~,~)
         cla(hStatsGrid(2))
         cla(hGridPlots(3))
         cla(hGridPlots(4))
@@ -453,13 +402,13 @@ for i=1:numCols
     lineXCol(:,i) = [i*dX i*dX]; lineYCol(:,i) = [0 1];
 end
 line(lineXRow,lineYRow,'color','k'); hold on;
-line(lineXCol,lineYCol,'color','k'); 
+line(lineXCol,lineYCol,'color','k');
 hold off;
 
 if ~isempty(highlightElectrodes)
     for i=1:length(highlightElectrodes)
         highlightElectrode=highlightElectrodes(i);
-        
+
         [highlightRow,highlightCol] = find(highlightElectrode==electrodeArray);
 
         % Create patch
@@ -467,7 +416,7 @@ if ~isempty(highlightElectrodes)
         patchY = (numRows-highlightRow)*dY;
         patchLocX = [patchX patchX patchX+dX patchX+dX];
         patchLocY = [patchY patchY+dY patchY+dY patchY];
-        
+
         if iscell(colorNames)
             patch('XData',patchLocX,'YData',patchLocY,'FaceColor',colorNames{i});
         else
@@ -521,22 +470,22 @@ gridLayout = rot90(reshape(1:81,[9,9]),2); %set grid layout alpaH
 ampGrid = nan(size(gridLayout,1),size(gridLayout,2),size(signal,1));
 phiGrid = nan(size(gridLayout,1),size(gridLayout,2),size(signal,1));
 
-   for i = 1:numel(goodElectrodes)
-       [x,y] = find(gridLayout==goodElectrodes(i));
-       ampGrid(x,y,:) = abs(hilbert(signal(:,i))).^2;
-       phiGrid(x,y,:) = angle(hilbert(signal(:,i)));
-   end
-  
-   %calculate phase coherence 
-   %add the phases together and calculate the magnitude of this for each
-   %time point.
-   mag = zeros(1,length(phiGrid));
-   for ind = 1:size(phiGrid,3)
-       phiValues = reshape(phiGrid(:,:,ind),[1,numel(phiGrid(:,:,ind))]);
-       phiValues(isnan(phiValues)) = [];
-       mag(ind) = sqrt(sum(phiValues).^2);     
-   end
-   clear x y 
+for i = 1:numel(goodElectrodes)
+    [x,y] = find(gridLayout==goodElectrodes(i));
+    ampGrid(x,y,:) = abs(hilbert(signal(:,i))).^2;
+    phiGrid(x,y,:) = angle(hilbert(signal(:,i)));
+end
+
+%calculate phase coherence
+%add the phases together and calculate the magnitude of this for each
+%time point.
+mag = zeros(1,length(phiGrid));
+for ind = 1:size(phiGrid,3)
+    phiValues = reshape(phiGrid(:,:,ind),[1,numel(phiGrid(:,:,ind))]);
+    phiValues(isnan(phiValues)) = [];
+    mag(ind) = sqrt(sum(phiValues).^2);
+end
+clear x y
 end
 
 % Limits & rescaling
@@ -572,3 +521,57 @@ end
 yLims=[yMin yMax];
 end
 
+% Time-frequency analysis
+function plotTFMT(hTF,data,timeVals,axisRanges,freqRangeHz,colorNames,type)
+
+Fs = round(1/(timeVals(2)-timeVals(1)));
+
+% TF options
+movingwin = [0.25 0.025];
+params.tapers = [1 1];
+params.pad = -1;
+params.Fs = Fs;
+params.fpass = [0 200];
+params.trialave = 1; % averaging across trials
+blRange = [-0.5 0];
+
+%time frequency analysis with multitapers
+[S,timeTF,freqVals] = mtspecgramc(data',movingwin,params);
+xValToPlot = timeTF+timeVals(1)-1/Fs;
+logPower = log10(S);
+
+if strcmp(type,'delta')
+    blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
+    logBLPower = repmat(mean(logPower(blPos,:,:),1),length(xValToPlot),1);
+    deltaPower = 10*(logPower - logBLPower);
+    pcolor(hTF,xValToPlot,freqVals,deltaPower');
+else
+    pcolor(hTF,xValToPlot,freqVals,logPower');
+end
+
+shading(hTF,'interp');
+colormap(hTF,'jet');
+axis(hTF,[axisRanges{2} axisRanges{1}]);
+clim(hTF,axisRanges{3});
+
+% Indicate frequency ranges of interest
+numRanges = length(freqRangeHz);
+for i=1:numRanges
+    line([axisRanges{2}],[freqRangeHz{i}(1) freqRangeHz{i}(1)],'color',colorNames(i,:),'parent',hTF);
+    line([axisRanges{2}],[freqRangeHz{i}(2) freqRangeHz{i}(2)],'color',colorNames(i,:),'parent',hTF);
+end
+end
+
+function getBurstInformation
+%%%%%%%%%% Parameters for burst calculation, hardcoded for now %%%%%%%%%%%%
+filterOrder = 4;
+thresholdFactor = 1;
+baselinePeriodS = [-0.5 0];
+stimulusPeriodS = [0.25 0.75];
+fRange = [0 100]; cLims = [-25 25]; timeRange = [-0.5 1];
+freqRangeHz = [str2double(get(hFreqRangeMin,'String')) str2double(get(hFreqRangeMax,'String'))];
+trialNum = trialNumList((get(hTrial,'val')));
+disp('Calculating TW parameters')
+[outputs] = getTWCircParams(squeeze(allData(:,trialNum,:)),timeVals,goodElectrodes,freqRangeHz,0,[]);
+
+end

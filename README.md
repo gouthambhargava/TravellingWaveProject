@@ -9,7 +9,7 @@ The following programs should be downloaded and added to Matlab path
 5. Cricular statistics toolbox: https://github.com/circstat/circstat-matlab
 
 Glossary of scripts
-- runDisplayData - Gives an example of the entire pipeline
+- runDisplayTWData - Gives an example of the entire pipeline
 - displayTWData - GUI to view travelling wave parameters
 - getTWCircParams - run circular regression with burst detection for calculating TW parameters
 - RunMP - run matching pursuit (stochastic algo) to extract gabor data and to save reconstructed time series
