@@ -290,12 +290,12 @@ pgdFG = outputsFG.pgd;
         if get(plotToggle, 'Value') == 1
             for ind = 1:numel(timeRangeProp)
                 delete(xlineP1);delete(xlineP2);delete(xlineP3);delete(xlineP4);delete(xlineP5);delete(xlineP6);delete(xlineMag1);delete(xlineMag2);delete(xlinePGD1);delete(xlinePGD2);delete(xlineBurst1);delete(xlineBurst2);
-                xlineP1 = xline(hSignalSingleTrial(1),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                xlineP2 = xline(hSignalSingleTrial(2),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                xlineP3 = xline(hSignalSingleTrial(3),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                xlineP4 = xline(hSignalSingleTrial(4),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                xlineP5 = xline(hSignalSingleTrial(5),timeVals(timeRangeProp(ind)),'LineWidth',2);
-                xlineP6 = xline(hSignalSingleTrial(6),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP1 = xline(hSignalSingleTrial(2),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP2 = xline(hSignalSingleTrial(3),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP3 = xline(hSignalSingleTrial(4),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP4 = xline(hSignalSingleTrial(6),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP5 = xline(hSignalSingleTrial(7),timeVals(timeRangeProp(ind)),'LineWidth',2);
+                xlineP6 = xline(hSignalSingleTrial(8),timeVals(timeRangeProp(ind)),'LineWidth',2);
                 xlineMag1 = xline(hSignalSingleTrial(1,1), timeVals(timeRangeProp(ind)),'LineWidth',2);
                 xlineMag2 = xline(hSignalSingleTrial(1,2), timeVals(timeRangeProp(ind)),'LineWidth',2);
                 xlinePGD1 = xline(hPGDPanel(1), timeVals(timeRangeProp(ind)),'LineWidth',2);
