@@ -1,10 +1,11 @@
 % Modified from getBurstLengthHilbert in https://github.com/supratimray/GammaLengthProjectCodes.
 
-function [burstLengthS,burstStartS,burstEndS,burstTS,bpfSignal,hilbertPower] = getHilbertBurst(analogData,timeVals,thresholdFactor,displayFlag,stimulusPeriodS,baselinePeriodS,burstFreqRangeHz,filterOrder,applyFilterFlag)
+function [burstLengthS,burstStartS,burstEndS,burstTS,bpfSignal,hilbertPower] = getHilbertBurst(analogData,timeVals,thresholdFactor,displayFlag,stimulusPeriodS,baselinePeriodS,burstFreqRangeHz,filterOrder,applyFilterFlag,analysisPeriodS)
 
-if ~exist('stimulusPeriodS','var');     stimulusPeriodS=[0.5 1.5];      end
+if ~exist('stimulusPeriodS','var');     stimulusPeriodS=[0.25 0.75];    end
 if ~exist('baselinePeriodS','var');     baselinePeriodS=[-1 0];         end
 if ~exist('burstFreqRangeHz','var');    burstFreqRangeHz=[40 60];       end
+if ~exist('analysisPeriodS','var');     analysisPeriodS=stimulusPeriodS;end
 
 numTrials=size(analogData,1);
 
@@ -33,13 +34,12 @@ for i=1:numTrials
         disp(['Trial : ' num2str(i) ' of ' num2str(numTrials)]);
         subplot(211);plot(timeVals,bpfSignal(i,:));xlim([stimulusPeriodS(1)-0.5 stimulusPeriodS(2)+0.5]);
     end
-    [burstLengthS{i},burstStartS{i},burstEndS{i},burstTS(i,:)] = getBurstLengthHilbertSingleTrial(hilbertPower(i,:),timeVals,threshold,stimulusPeriodS,displayFlag);
+    [burstLengthS{i},burstStartS{i},burstEndS{i},burstTS(i,:)] = getBurstLengthHilbertSingleTrial(hilbertPower(i,:),timeVals,threshold,analysisPeriodS,displayFlag);
 end
 end
 
 function [burstLengthS,burstStartS,burstEndS,burstTS] = getBurstLengthHilbertSingleTrial(bandPassPowerSingleTrial,timeVals,threshold,stimulusPeriodS,displayFlag)
-%temporary - set stimulusPeriodS to include the whole trail
-stimulusPeriodS = [timeVals(1),timeVals(end)];
+
 stPos = intersect(find(timeVals>=stimulusPeriodS(1)),find(timeVals<stimulusPeriodS(2)));
 st=timeVals(1,stPos);
 stBandPassPowerSingleTrial=bandPassPowerSingleTrial(1,stPos);
