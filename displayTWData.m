@@ -170,8 +170,16 @@ pgdFG = outputsFG.pgd;
         %%%%%%%%%%%%%%%%%%%%%%%%%%% Plot data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % plot TF data for all channels 
         plotTFMT(hTFAllTrials(1),allData,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',1,[],[]); % Time-frequency power spectrum for all trials
+        hold(hTFAllTrials(1),'on')
+        xline(hTFAllTrials(1),0.25);
+        hold(hTFAllTrials(1),'on');
+        xline(hTFAllTrials(1),0.75);
         plotTFMT(hTFSingleTrial(1),allData,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',0,trialNum,[]);
-
+        hold(hTFSingleTrial(1),'on')
+        xline(hTFSingleTrial(1),0.25);
+        hold(hTFSingleTrial(1),'on');
+        xline(hTFSingleTrial(1),0.75);
+        
         for i=1:numSelectedElectrodes
             ePos = find(selectedElectrodes(i)==goodElectrodes);
             signalAllTrials = allData(ePos,:,:);
