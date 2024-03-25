@@ -39,7 +39,7 @@ end
 
 function [burstLengthS,burstStartS,burstEndS,burstTS] = getBurstLengthHilbertSingleTrial(bandPassPowerSingleTrial,timeVals,threshold,stimulusPeriodS,displayFlag)
 %temporary - set stimulusPeriodS to include the whole trail
-stimulusPeriodS = [timeVals(1),timeVals(end)];
+%stimulusPeriodS = [timeVals(1),timeVals(end)];
 stPos = intersect(find(timeVals>=stimulusPeriodS(1)),find(timeVals<stimulusPeriodS(2)));
 st=timeVals(1,stPos);
 stBandPassPowerSingleTrial=bandPassPowerSingleTrial(1,stPos);

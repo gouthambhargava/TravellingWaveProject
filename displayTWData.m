@@ -29,7 +29,6 @@ disp('Getting data...');
 [allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
 numGoodElectrodes = length(goodElectrodes);
 
-
 %%%%%%%%%%%%%%%%%%%%%%% Do burst estimation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 thresholdFactor = 1;
 baselinePeriodS = [-0.5 0];
@@ -129,6 +128,7 @@ hBurstsAllElectrodes = getPlotHandles(numFrequencyRanges,1,[0.85 0.05 0.125 0.65
 hPGDPanel = getPlotHandles(2,1,[0.85 0.75 0.125 0.25],0.01,0.01);
 hTFAllTrials = getPlotHandles(numSelectedElectrodes+1,1,[0.275 0.05 0.1 0.8]);
 hTFSingleTrial = getPlotHandles(numSelectedElectrodes+1,1,[0.4 0.05 0.15 0.8]);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get TW params %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Getting TW parameters')
 trialNum = trialNumList((get(hTrial,'val')));
@@ -169,33 +169,20 @@ pgdFG = outputsFG.pgd;
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%% Plot data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % plot TF data for all channels 
-        plotTFMT(hTFAllTrials(1),allData,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',1,[],[]); % Time-frequency power spectrum for all trials
-        hold(hTFAllTrials(1),'on')
-        xline(hTFAllTrials(1),0.25);
-        hold(hTFAllTrials(1),'on');
-        xline(hTFAllTrials(1),0.75);
-        plotTFMT(hTFSingleTrial(1),allData,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',0,trialNum,[]);
-        hold(hTFSingleTrial(1),'on')
-        xline(hTFSingleTrial(1),0.25);
-        hold(hTFSingleTrial(1),'on');
-        xline(hTFSingleTrial(1),0.75);
-        
+        plotTFMT(hTFAllTrials(1),allData,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',[],stimulusPeriodS); % Time-frequency power spectrum for all trials
+        plotTFMT(hTFSingleTrial(1),allData,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',trialNum,stimulusPeriodS);
+    
         for i=1:numSelectedElectrodes
             ePos = find(selectedElectrodes(i)==goodElectrodes);
             signalAllTrials = allData(ePos,:,:);
 
             if strcmp(analysisMethod,'hilbert') % Use Multi-taper method
-                plotTFMT(hTFAllTrials(i+1),signalAllTrials,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',1,[],[]); % Time-frequency power spectrum for all trials
-                plotTFMT(hTFSingleTrial(i+1),signalAllTrials,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',0,trialNum,[]);
-                hold(hTFSingleTrial(i+1),'on');
-%                 hold(hTFAllTrials(i+1),'on');
-%                 xline(hTFAllTrials(i+1),0.25);
-%                 hold(hTFAllTrials(i+1),'on');
-%                 xline(hTFAllTrials(i+1),0.75);
-                
+                plotTFMT(hTFAllTrials(i+1),signalAllTrials,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',[],[]); % Time-frequency power spectrum for all trials
+                plotTFMT(hTFSingleTrial(i+1),signalAllTrials,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',trialNum,[]);
             else
                 plotTFMP(hTFAllTrials(i),subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos,selectedElectrodes(i),timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges); % Write this code - this data should be saved somewhere
             end
+            hold(hTFSingleTrial(i+1),'on');
 
             % Plot filtered signal and show bursts
             for j=1:numFrequencyRanges
@@ -204,10 +191,6 @@ pgdFG = outputsFG.pgd;
                 plot(hSignalSingleTrial(i+1,j),timeVals,squeeze(burstTS(ePos,trialNum,:,j))-1,'color','r','linewidth',2);
                 axis(hSignalSingleTrial(i+1,j),[axisRange1List{2} axisRange2List{j}]);
                 plot(hTFSingleTrial(i+1),timeVals, mean(freqRangeList{j})+ squeeze(burstTS(ePos,trialNum,:,j))-1,'color',colorNamesFreqRanges(j,:),'linewidth',2);
-%                 hold(hSignalSingleTrial(i+1,j),'on');
-%                 xline(hTFSingleTrial(i+1),0.25);
-%                 hold(hTFSingleTrial(i+1,j),'on');
-%                 xline(hTFSingleTrial(i+1),0.75);
             end
         end
        % plot bursts 
@@ -589,15 +572,13 @@ yLims=[yMin yMax];
 end
 
 % Time-frequency analysis
-function plotTFMT(hTF,data,timeVals,axisRanges,freqRangeHz,colorNames,type,trialAvg,trialNo,chan)
-% supply data in the form channels x trails x times
-% specify if trial avegaring is required, 0 not required, 1 required
-if nargin<10
-    chan=[];
-end
+function plotTFMT(hTF,data,timeVals,axisRanges,freqRangeHz,colorNames,type,trialNo,stimulusPeriodS)
+% supply data in the form channels x trials x times
+% set trialNo to [] if all channels are needed
+
 Fs = round(1/(timeVals(2)-timeVals(1)));
 
-if trialAvg==0
+if ~isempty(trialNo)
     data = data(:,trialNo,:);
 end
 
@@ -607,22 +588,17 @@ params.tapers = [1 1];
 params.pad = -1;
 params.Fs = Fs;
 params.fpass = [0 200];
-params.trialave = trialAvg; % averaging across trials
+params.trialave = 1; % averaging across trials
 blRange = [-0.5 0];
 
-
+% Time frequency analysis with multitapers
 for i = 1:size(data,1)
-%time frequency analysis with multitapers
-[S,timeTF,freqVals] = mtspecgramc(squeeze(data(i,:,:))',movingwin,params);
+    [S,timeTF,freqVals] = mtspecgramc(squeeze(data(i,:,:))',movingwin,params);
+    logPower(:,:,i) = log10(S); %#ok<AGROW>
+end
 xValToPlot = timeTF+timeVals(1)-1/Fs;
-logPower(:,:,i) = log10(S);
-end
 
-if ~isempty(chan)
-    logPower = logPower(:,:,chan);
-else 
-    logPower = mean(logPower,3);
-end
+logPower = mean(logPower,3);
 
 if strcmp(type,'delta')
     blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
@@ -636,8 +612,7 @@ end
 shading(hTF,'interp');
 colormap(hTF,'jet');
 axis(hTF,[axisRanges{2} axisRanges{1}]);
-caxis(hTF,axisRanges{3});
-stimValues = [dsearchn(xValToPlot',0.25),dsearchn(xValToPlot',0.75)];
+clim(hTF,axisRanges{3});
 
 % Indicate frequency ranges of interest
 numRanges = length(freqRangeHz);
@@ -646,4 +621,8 @@ for i=1:numRanges
     line([axisRanges{2}],[freqRangeHz{i}(2) freqRangeHz{i}(2)],'color',colorNames(i,:),'parent',hTF);
 end
 
+if ~isempty(stimulusPeriodS)
+    line([stimulusPeriodS(1) stimulusPeriodS(1)],[axisRanges{1}],'color','k','parent',hTF);
+    line([stimulusPeriodS(2) stimulusPeriodS(2)],[axisRanges{1}],'color','k','parent',hTF);
+end
 end
