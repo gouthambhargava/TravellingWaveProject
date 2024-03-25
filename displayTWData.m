@@ -30,9 +30,10 @@ disp('Getting data...');
 numGoodElectrodes = length(goodElectrodes);
 
 %%%%%%%%%%%%%%%%%%%%%%% Do burst estimation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-thresholdFactor = 1;
+thresholdFactor = 2;
 baselinePeriodS = [-0.5 0];
 stimulusPeriodS = [0.25 0.75];
+analysisPeriodS = [-0.5 1];
 filterOrder = 4;
 
 disp('Performing burst analysis...');
@@ -41,7 +42,7 @@ filteredSignal = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFreq
 if strcmp(analysisMethod,'hilbert')
     for iFreq=1:numFrequencyRanges
         for iElec=1:numGoodElectrodes
-            [~,~,~,burstTS(iElec,:,:,iFreq),filteredSignal(iElec,:,:,iFreq)] = getHilbertBurst(squeeze(allData(iElec,:,:)),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeList{iFreq},filterOrder,1);
+            [~,~,~,burstTS(iElec,:,:,iFreq),filteredSignal(iElec,:,:,iFreq)] = getHilbertBurst(squeeze(allData(iElec,:,:)),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeList{iFreq},filterOrder,1,analysisPeriodS);
         end
     end
 else
@@ -193,23 +194,24 @@ pgdFG = outputsFG.pgd;
                 plot(hTFSingleTrial(i+1),timeVals, mean(freqRangeList{j})+ squeeze(burstTS(ePos,trialNum,:,j))-1,'color',colorNamesFreqRanges(j,:),'linewidth',2);
             end
         end
-       % plot bursts 
+
+       % Plot bursts 
        chanVals = repmat((1:numel(goodElectrodes))',1,size(burstTS,3))';  
        burstDurationSG = timeVals(durIndicesSG>1);
        burstDurationFG = timeVals(durIndicesFG>1);
        plot(timeVals,squeeze(burstTS(:,trialNum,:,1))'+chanVals-1,'parent',hBurstsAllElectrodes(1),'color','r','linewidth',1);
-       hold(hBurstsAllElectrodes(1),'on')
+       hold(hBurstsAllElectrodes(1),'on');
        
        for xlineInd = 1:length(burstDurationSG)   
-           xline(burstDurationSG(xlineInd),'parent',hBurstsAllElectrodes(1),'color','k');
-           hold(hBurstsAllElectrodes(1),'on')
+           line([burstDurationSG(xlineInd) burstDurationSG(xlineInd)],[0 numGoodElectrodes] ,'parent',hBurstsAllElectrodes(1),'color','k');
+           hold(hBurstsAllElectrodes(1),'on');
        end
        
        plot(timeVals,squeeze(burstTS(:,trialNum,:,2))'+chanVals-1,'parent',hBurstsAllElectrodes(2),'color','r','linewidth',1);
        hold(hBurstsAllElectrodes(2),'on')   
        for xlineInd = 1:length(burstDurationFG)   
-           xline(burstDurationFG(xlineInd),'parent',hBurstsAllElectrodes(2),'color','k');
-           hold(hBurstsAllElectrodes(2),'on')
+           line([burstDurationFG(xlineInd) burstDurationFG(xlineInd)],[0 numGoodElectrodes],'parent',hBurstsAllElectrodes(2),'color','k');
+           hold(hBurstsAllElectrodes(2),'on');
        end
        
         %plot phase coherence
