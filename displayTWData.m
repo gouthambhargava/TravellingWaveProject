@@ -204,10 +204,10 @@ pgdFG = outputsFG.pgd;
                 plot(hSignalSingleTrial(i+1,j),timeVals,squeeze(burstTS(ePos,trialNum,:,j))-1,'color','r','linewidth',2);
                 axis(hSignalSingleTrial(i+1,j),[axisRange1List{2} axisRange2List{j}]);
                 plot(hTFSingleTrial(i+1),timeVals, mean(freqRangeList{j})+ squeeze(burstTS(ePos,trialNum,:,j))-1,'color',colorNamesFreqRanges(j,:),'linewidth',2);
-                hold(hSignalSingleTrial(i+1,j),'on');
-                xline(hTFSingleTrial(i+1),0.25);
-                hold(hTFSingleTrial(i+1,j),'on');
-                xline(hTFSingleTrial(i+1),0.75);
+%                 hold(hSignalSingleTrial(i+1,j),'on');
+%                 xline(hTFSingleTrial(i+1),0.25);
+%                 hold(hTFSingleTrial(i+1,j),'on');
+%                 xline(hTFSingleTrial(i+1),0.75);
             end
         end
        % plot bursts 
