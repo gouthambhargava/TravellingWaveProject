@@ -15,17 +15,18 @@ end
     fs = 2000; %sampling frequency
 %% filter and extract instant phase of the lfp data
     burstTS = zeros(size(data,1),size(data,2));
+    filteredSignal = zeros(size(data,1),size(data,2));
     filterOrder = 4; 
-    thresholdFactor = 1;
+    thresholdFactor = 2;
     baselinePeriodS = [-0.5 0]; 
     stimulusPeriodS = [0.25 0.75];
 
     for i = 1:size(data,1)
-        [~,~,~,burstTS(i,:),~,~] = getHilbertBurst(data(i,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqs,filterOrder,req);
+        [~,~,~,burstTS(i,:),filteredSignal(i,:),~] = getHilbertBurst(data(i,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqs,filterOrder,req);
     end
     
     burstTS(isnan(burstTS)) = 0;
-    phiMat = angle(hilbert(data'))';
+    phiMat = angle(hilbert(filteredSignal'))';
     gridLayout = rot90(reshape(1:81,[9,9]),2); %set the grid layout
     timePoints = size(data,2);
     
@@ -35,6 +36,7 @@ end
     cluster = zeros(timePoints,1);
     circVmean = zeros(timePoints,1);
     sFreq = zeros(timePoints,1);
+    mag = zeros(timePoints,1);
     if ~isempty(nPerm)
     pgdPerm = zeros(timePoints,nPerm);
     end
@@ -51,14 +53,18 @@ end
         for timei = 1:size(phiMat,2)
             phiGrid = phiMat(:,timei);
             elecs = find(burstTS(:,timei));
+%             mag(timei,:) = sqrt(sum(phiGrid.^2));
+            
                    %skip to next time point if cluster has <4 electrodes
                    if numel(elecs)<3
-                        pgd(:,timei) = 0;
-                        direction(:,timei) = 0;
-                        cluster(:,timei) = 0;
+                        pgd(timei,:) = 0;
+                        direction(timei,:) = 0;
+                        cluster(timei,:) = 0;
+                        mag(timei,:) = 0;
                    else
                         cluster(timei,1) = numel(elecs);
                         circularCord = phiGrid(elecs);
+                        mag(timei,:) = sqrt(sum(phiGrid.^2));
                         circVmean(timei,1) = circ_mean(circularCord);
                         linearCord = locList(elecs,:,:);
                         linearCord(:,3,:) = [];
@@ -84,7 +90,8 @@ end
     outputs.tempFreq = phi_dot/(2*pi); % convert to Hz
     outputs.speed = outputs.tempFreq./(sFreq(2:end)/elecDist); % convert to m/s
     outputs.pgd = pgd;
-    outputs.clusters = cluster; %the number of electrodes involved in the TW 
+    outputs.clusters = cluster; %the number of electrodes involved in the TW
+    outputs.mag = mag;
     if ~isempty(nPerm)
     outputs.pgdPerm = prctile(pgdPerm',0.99);
     end
