@@ -1,34 +1,21 @@
-function [outputs] = getTWCircParams(data,timeVals,goodElectrodes,freqs,req,nPerm)
+function [outputs] = getTWCircParams(filteredSignal,burstData,timeVals,goodElectrodes,nPerm)
 %% Inputs
 %%Inputs
-% data - single trial data in the electrodes x time points format
+% data - filtered single trial data in the electrodes x time points format
 % goodElectrodes - list of good electrodes
 % timeVals - vector of time values
-% freqs - vector of frequency limits (ex. [30 60])
-% req - 0 (no filtering required, if MP is being used) or 1 (butterworth filter being used)
+% burstData - time series of burst locations
 %% 
 if nargin<5
     nPerm = [];
 end
 %% Parameters
     elecDist = 400*10^-6; %distance between adjacent electrodes in the array in m
-    fs = 2000; %sampling frequency
+    fs = 1/(timeVals(2)-timeVals(1)); %sampling frequency
 %% filter and extract instant phase of the lfp data
-    burstTS = zeros(size(data,1),size(data,2));
-    filteredSignal = zeros(size(data,1),size(data,2));
-    filterOrder = 4; 
-    thresholdFactor = 2;
-    baselinePeriodS = [-0.5 0]; 
-    stimulusPeriodS = [0.25 0.75];
-
-    for i = 1:size(data,1)
-        [~,~,~,burstTS(i,:),filteredSignal(i,:),~] = getHilbertBurst(data(i,:),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqs,filterOrder,req);
-    end
-    
-    burstTS(isnan(burstTS)) = 0;
     phiMat = angle(hilbert(filteredSignal'))';
     gridLayout = rot90(reshape(1:81,[9,9]),2); %set the grid layout
-    timePoints = size(data,2);
+    timePoints = length(timeVals);
     
     %initialize results
     pgd = zeros(timePoints,1);
@@ -37,8 +24,9 @@ end
     circVmean = zeros(timePoints,1);
     sFreq = zeros(timePoints,1);
     mag = zeros(timePoints,1);
+    
     if ~isempty(nPerm)
-    pgdPerm = zeros(timePoints,nPerm);
+        pgdPerm = zeros(timePoints,nPerm);
     end
     % get location for each electrode for segmentation into clusters 
     locList = nan(length(goodElectrodes),2);
@@ -52,16 +40,9 @@ end
     % detection
         for timei = 1:size(phiMat,2)
             phiGrid = phiMat(:,timei);
-            elecs = find(burstTS(:,timei));
-%             mag(timei,:) = sqrt(sum(phiGrid.^2));
-            
+            elecs = find(burstData(:,timei));          
                    %skip to next time point if cluster has <4 electrodes
-                   if numel(elecs)<3
-                        pgd(timei,:) = 0;
-                        direction(timei,:) = 0;
-                        cluster(timei,:) = 0;
-                        mag(timei,:) = 0;
-                   else
+                   if numel(elecs)>3
                         cluster(timei,1) = numel(elecs);
                         circularCord = phiGrid(elecs);
                         mag(timei,:) = sqrt(sum(phiGrid.^2));

@@ -1,6 +1,6 @@
 % This code runs the main display program (displayTWData)
 %% select data of particular orientation
-dataPath = 'N:\Projects\Bhargava_TravelingWaveProject\data';
+dataPath = 'G:\alpa\data';
 gridType = 'Microelectrode';
 
 subjectName='alpaH'; expDate = '210817'; protocolName = 'GRF_002'; selectedElectrodes = [1 41 81]; freqRangeList{1} = [25 35]; freqRangeList{2} = [40 60];

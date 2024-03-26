@@ -38,9 +38,9 @@ for i=1:numTrials
 end
 end
 
-function [burstLengthS,burstStartS,burstEndS,burstTS] = getBurstLengthHilbertSingleTrial(bandPassPowerSingleTrial,timeVals,threshold,stimulusPeriodS,displayFlag)
+function [burstLengthS,burstStartS,burstEndS,burstTS] = getBurstLengthHilbertSingleTrial(bandPassPowerSingleTrial,timeVals,threshold,analysisPeriodS,displayFlag)
 
-stPos = intersect(find(timeVals>=stimulusPeriodS(1)),find(timeVals<stimulusPeriodS(2)));
+stPos = intersect(find(timeVals>=analysisPeriodS(1)),find(timeVals<analysisPeriodS(2)));
 st=timeVals(1,stPos);
 stBandPassPowerSingleTrial=bandPassPowerSingleTrial(1,stPos);
 
@@ -101,7 +101,7 @@ blData = smoothedPowerBpfSignal(:,blPos);
 mBL = median(blData(:));
 end
 
-function [hilbertPower,bpfSignal] = getHilbertPower(signal,timeVals,gammaFreqRangeHz,filtOrder,req)
+function [hilbertPower,bpfSignal] = getHilbertPower(signal,timeVals,gammaFreqRangeHz,filtOrder,applyFilterFlag)
 % This function computes the instantaneous power at gamma band using
 % Hilbert transform. It uses a Butterworth filter to bandpass filter the
 % signal in the gamma range
@@ -118,7 +118,7 @@ function [hilbertPower,bpfSignal] = getHilbertPower(signal,timeVals,gammaFreqRan
 %                               using Butterworth filter
 
 %BPF the signal
-if req==1
+if applyFilterFlag==1
     Fs=1/(timeVals(2)-timeVals(1));
     normBand=gammaFreqRangeHz/(Fs/2);
     [b,a]=butter(filtOrder,normBand,'bandpass');
