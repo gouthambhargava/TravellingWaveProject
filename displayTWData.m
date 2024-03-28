@@ -119,7 +119,9 @@ end
 
 %%%%%%%%%%%%%%%%%%%%  Traveling Wave plot panel %%%%%%%%%%%%%%%%%%%%%%%%
 hPanel4 = uipanel('Title','Traveling Wave','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.6 1-panelHeight 0.2 panelHeight]);
-electrodeFraction = 0.5;
+electrodeFraction = 0.6;
+electrodeChoice = 'all'; % 'all' or 'selected'
+refPhaseChoice = 'avg'; % choose electrode number
 
 %%%%%%%%%%%%%%%%%%%%  Phase propagation plot panel %%%%%%%%%%%%%%%%%%%%%%%%
 hPanel5 = uipanel('Title','Plot Phase Propagation','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.8 1-panelHeight 0.2 panelHeight]);
@@ -145,6 +147,7 @@ hGridPlots2 = getPlotHandles(3,numFrequencyRanges,[0.8 0.05 0.19 0.8]);
 plotTFMT(hTF(1,1),allData,timeVals,axisRange1List0,freqRangeList,colorNamesFreqRanges,'raw',[],stimulusDurationS); % Time-frequency power spectrum for all trials
 
 phaseMatrix = cell(1,numFrequencyRanges);
+outputsTW = cell(1,numFrequencyRanges);
 
     function plot_Callback(~,~)
 
@@ -164,7 +167,7 @@ phaseMatrix = cell(1,numFrequencyRanges);
             tmp = squeeze(burstTS(:,trialNum,:,i));
             tmp(isnan(tmp)) = 0;
             burstMatrix{i} = tmp;
-            outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,electrodeFraction);
+            outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,electrodeFraction,electrodeChoice);
         end
             
         if ~isequal(selectedElectrodes0,selectedElectrodes)
@@ -219,8 +222,8 @@ phaseMatrix = cell(1,numFrequencyRanges);
 
        % Plot TW stats
         for i = 1:numFrequencyRanges
-            plot(hStats(1,i),timeVals,outputsTW{i}.direction,'color',colorNamesFreqRanges(i,:));
-            xlim(hStats(1,i),axisRange1List{2});
+            plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
+            axis(hStats(1,i),[axisRange1List{2} -pi pi]);
 
             plot(hStats(2,i),timeVals,outputsTW{i}.Wavelength,'color',colorNamesFreqRanges(i,:));
             xlim(hStats(2,i),axisRange1List{2});
@@ -267,7 +270,11 @@ phaseMatrix = cell(1,numFrequencyRanges);
 
                     % plot absolute phases
                     tmpPhases = phaseMatrix{j}(:,timeRangeProp(ind));
-                    refPhase = circ_mean(tmpPhases);
+                    if strcmp(refPhaseChoice,'avg')
+                        refPhase = circ_mean(tmpPhases);
+                    else
+                        % choose the specified electrode as reference
+                    end
 
                     for e=1:numGoodElectrodes
                         tmpMatrix1(locList(e,1),locList(e,2)) = tmpPhases(e);
@@ -306,7 +313,6 @@ phaseMatrix = cell(1,numFrequencyRanges);
         claGivenPlotHandle(hStats);
 
     end
-
     function rescale_Callback(~,~)
         freqLims = [str2double(get(hAxisRange1Min{1},'String')) str2double(get(hAxisRange1Max{1},'String'))];
         timeLims = [str2double(get(hAxisRange1Min{2},'String')) str2double(get(hAxisRange1Max{2},'String'))];
@@ -321,7 +327,6 @@ phaseMatrix = cell(1,numFrequencyRanges);
             rescaleGivenPlotHandle(hSignal(2:end,i),[timeLims yLims]);
         end
     end
-
     function rescaleZGivenPlotHandle(plotHandles,cLims)
         [numRows,numCols] = size(plotHandles);
         for i=1:numRows
@@ -330,12 +335,12 @@ phaseMatrix = cell(1,numFrequencyRanges);
             end
         end
     end
-
     function cla_Callback2(~,~)
         claGivenPlotHandle(hGridPlots2);
     end
 end
 
+% Electrode location and display
 function stimElectrode = showElectrodeRFs(hPlot,goodElectrodes,colorName,rfData,parameters)
 aValsUnique = parameters.aValsUnique;
 eValsUnique = parameters.eValsUnique;
@@ -427,7 +432,6 @@ end
 
 set(hPlot,'XTickLabel',[],'YTickLabel',[]);
 end
-
 function electrodeArray = showRFPositionsSelectedElectrodes(hRFPlots,goodElectrodes,selectedElectrodes,rfData,parameters,colorNames)
 cla(hRFPlots(1)); cla(hRFPlots(2));
 showElectrodeRFs(hRFPlots(1),goodElectrodes,'k',rfData,parameters);
@@ -452,7 +456,14 @@ for i=1:numRows
     end
 end
 end
-
+function claGivenPlotHandle(plotHandles)
+[numRows,numCols] = size(plotHandles);
+for i=1:numRows
+    for j=1:numCols
+        cla(plotHandles(i,j));
+    end
+end
+end
 
 % Time-frequency analysis
 function plotTFMT(hTF,data,timeVals,axisRanges,freqRangeHz,colorNames,type,trialNo,stimulusPeriodS)
@@ -507,13 +518,5 @@ end
 if ~isempty(stimulusPeriodS)
     line([stimulusPeriodS(1) stimulusPeriodS(1)],[axisRanges{1}],'color','k','parent',hTF);
     line([stimulusPeriodS(2) stimulusPeriodS(2)],[axisRanges{1}],'color','k','parent',hTF);
-end
-end
-function claGivenPlotHandle(plotHandles)
-[numRows,numCols] = size(plotHandles);
-for i=1:numRows
-    for j=1:numCols
-        cla(plotHandles(i,j));
-    end
 end
 end
