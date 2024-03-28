@@ -1,4 +1,4 @@
-function outputs = getTWCircParams(phiMat,burstMat,timeVals,goodElectrodes,locList,electrodeFraction,nPerm)
+function outputs = getTWCircParams(phiMat,burstMat,timeVals,goodElectrodes,locList,electrodeFraction,electrodeChoice,nPerm)
 % Inputs
 % phiMat - phases of single trial data in electrodes x time points format
 % burstMat - time series indicting burst times in electrodes x time points format
@@ -6,8 +6,8 @@ function outputs = getTWCircParams(phiMat,burstMat,timeVals,goodElectrodes,locLi
 % goodElectrodes - list of good electrodes
 % locList - array of size electrodes x 2 containing the x and y position of each electrode
 % electrodeFraction - identify as a cluster only when the number of
-% electrodes showing a burst exceeds this fraction. However, when set to
-% zero, all electrodes are chosen for analysis
+% electrodes showing a burst exceeds this fraction.
+% electrodeChoice - 'all' or 'selected': Choose either all electrodes or only the electrodes showing a burst for TW calculations 
 % nPerm - when not set to [], TW statistics are computed nPerm times after shuffling the phases.
 
 if ~exist('nPerm','var');               nPerm = [];                     end
@@ -39,7 +39,7 @@ numElectrodeCutoff = round(electrodeFraction*numel(goodElectrodes));
 for timei = 1:timePoints
     phiGrid = phiMat(:,timei);
     
-    if (numElectrodeCutoff==0) % take all electrodes
+    if strcmp(electrodeChoice,'all') % take all electrodes
         elecs = 1:numGoodElectrodes;
     else
         elecs = find(burstMat(:,timei));
