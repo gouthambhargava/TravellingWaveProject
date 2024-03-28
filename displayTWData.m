@@ -148,13 +148,14 @@ plotTFMT(hTF(1,1),allData,timeVals,axisRange1List0,freqRangeList,colorNamesFreqR
 
 phaseMatrix = cell(1,numFrequencyRanges);
 outputsTW = cell(1,numFrequencyRanges);
+state = 0; % state variable to display the phases
 
     function plot_Callback(~,~)
 
         % Data choices
         selectedElectrodes0 = str2num(get(hElectrodes,'String')); %#ok<ST2NM>
         trialNum = trialNumList((get(hTrial,'val')));
-        
+
         % Calculate TW parameters
         disp('Getting TW parameters');
 
@@ -169,7 +170,7 @@ outputsTW = cell(1,numFrequencyRanges);
             burstMatrix{i} = tmp;
             outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,electrodeFraction,electrodeChoice);
         end
-            
+
         if ~isequal(selectedElectrodes0,selectedElectrodes)
             showRFPositionsSelectedElectrodes(hGridPlots(1,:),goodElectrodes,selectedElectrodes0,rfData,parameters,colorNamesElectrodes);
             selectedElectrodes = selectedElectrodes0;
@@ -186,9 +187,9 @@ outputsTW = cell(1,numFrequencyRanges);
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%% Plot data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % plot TF data for all channels         
+        % plot TF data for all channels
         plotTFMT(hTF(1,2),allData,timeVals,axisRange1List,freqRangeList,colorNamesFreqRanges,'raw',trialNum,stimulusDurationS);
-        
+
         %Plot TF info for selected channels
         for i=1:numSelectedElectrodes
             ePos = find(selectedElectrodes(i)==goodElectrodes);
@@ -212,15 +213,15 @@ outputsTW = cell(1,numFrequencyRanges);
             end
         end
 
-       % Plot bursts
-       for i = 1:numFrequencyRanges    
-           chanVals = repmat((1:numel(goodElectrodes))',1,size(burstTS,3))';  
-           plot(timeVals,squeeze(burstTS(:,trialNum,:,i))'+chanVals-1,'parent',hSignal(1,i),'color','r','linewidth',1);
-           hold(hSignal(1,i),'on');
-           xlim(hSignal(1,i),axisRange1List{2});
-       end
+        % Plot bursts
+        for i = 1:numFrequencyRanges
+            chanVals = repmat((1:numel(goodElectrodes))',1,size(burstTS,3))';
+            plot(timeVals,squeeze(burstTS(:,trialNum,:,i))'+chanVals-1,'parent',hSignal(1,i),'color','r','linewidth',1);
+            hold(hSignal(1,i),'on');
+            xlim(hSignal(1,i),axisRange1List{2});
+        end
 
-       % Plot TW stats
+        % Plot TW stats
         for i = 1:numFrequencyRanges
             plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
             axis(hStats(1,i),[axisRange1List{2} -pi pi]);
@@ -238,24 +239,38 @@ outputsTW = cell(1,numFrequencyRanges);
     end
 
     function plot_Callback2(~,~)
-        
-        timeRangeProp = [str2double(get(hTimeRangePropMin,'String')) str2double(get(hTimeRangePropMax,'String'))];
-        timeRangeProp = dsearchn(timeVals',timeRangeProp(1)):dsearchn(timeVals',timeRangeProp(2));
-
-        %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%
-        % Initialize
-        for j=1:numFrequencyRanges
-            for k=1:size(hSignal,1)
-                xLinesSignal(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2); %#ok<*AGROW>
-            end
-            for k=1:size(hStats,1)
-                xLinesStats(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hStats(k,j),'YLim'),'parent',hStats(k,j),'LineWidth',2);
-            end
-        end
 
         if get(plotToggle,'Value') == 1
 
+            state = 1; % This allows the program to start displaying the phase plots
+
+            timeRangeProp = [str2double(get(hTimeRangePropMin,'String')) str2double(get(hTimeRangePropMax,'String'))];
+            timeRangeProp = dsearchn(timeVals',timeRangeProp(1)):dsearchn(timeVals',timeRangeProp(2));
+
+            %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%
+            % Initialize
+            for j=1:numFrequencyRanges
+                for k=1:size(hSignal,1)
+                    xLinesSignal(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2); %#ok<*AGROW>
+                end
+                for k=1:size(hStats,1)
+                    xLinesStats(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hStats(k,j),'YLim'),'parent',hStats(k,j),'LineWidth',2);
+                end
+            end
+
             for ind = 1:numel(timeRangeProp)
+                if state==0 % if state changes to 0, delete lines and return
+                    for j=1:numFrequencyRanges
+                        for k=1:size(hSignal,1)
+                            delete(xLinesSignal(k,j));
+                        end
+                        for k=1:size(hStats,1)
+                            delete(xLinesStats(k,j));
+                        end
+                    end
+                    return;
+                end
+
                 for j=1:numFrequencyRanges
 
                     % Delete old lines and create new ones
@@ -295,15 +310,7 @@ outputsTW = cell(1,numFrequencyRanges);
                 drawnow
             end
         else
-            for j=1:numFrequencyRanges
-                for k=1:size(hSignal,1)
-                    delete(xLinesSignal(k,j));
-                end
-                for k=1:size(hStats,1)
-                    delete(xLinesStats(k,j));
-                end
-            end
-            uiwait;
+            state = 0;
         end
     end
 
@@ -317,7 +324,7 @@ outputsTW = cell(1,numFrequencyRanges);
         freqLims = [str2double(get(hAxisRange1Min{1},'String')) str2double(get(hAxisRange1Max{1},'String'))];
         timeLims = [str2double(get(hAxisRange1Min{2},'String')) str2double(get(hAxisRange1Max{2},'String'))];
         cLims = [str2double(get(hAxisRange1Min{3},'String')) str2double(get(hAxisRange1Max{3},'String'))];
-        
+
         % Rescale TF plots
         rescaleGivenPlotHandle(hTF,[timeLims freqLims]);
         rescaleZGivenPlotHandle(hTF,cLims);
