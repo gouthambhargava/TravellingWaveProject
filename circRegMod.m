@@ -76,7 +76,7 @@ Rsquared=cc^2;
 % pos_circ=mod(pos_circ,2*pi);
 
 % to calculate pgd
-PGD = 1- (((1-Rsquared)*(length(circularV)-1))/(length(circularV)-size(linearV,2)-1));
+PGD = 1- (((1-Rsquared)*(length(circularV)-1))/(length(circularV)-size(linearV,2)-2));
 end
 
 

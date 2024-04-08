@@ -21,7 +21,7 @@ numGoodElectrodes = length(goodElectrodes);
 
 %initialize results
 pgd = zeros(timePoints,1);
-direction = zeros(timePoints,1);
+direction = nan(timePoints,1);
 cluster = zeros(timePoints,1);
 circVmean = zeros(timePoints,1);
 sFreq = zeros(timePoints,1);
@@ -56,13 +56,14 @@ for timei = 1:timePoints
         [direction(timei,1),sFreq(timei,1),~,~,pgd(timei,1)] = circRegMod(circularCord,linearCord);
         if ~isempty(nPerm)
             for perm = 1:nPerm
-                permVar = zeros(length(circularCord),nPerm);
-                permVar(:,perm) = circularCord(randperm(length(circularCord)));
+                permVar = zeros(length(circularCord),2,nPerm);
+                permVar(:,:,perm) = linearCord(randperm(length(linearCord)),:);
             end
-            for perm = 1:nPerm
-                [~,~,~,~,pgdPerm(timei,perm)] = circRegMod(permVar(:,perm),linearCord);
+            parfor perm = 1:nPerm
+                [~,~,~,~,pgdPerm(timei,perm)] = circRegMod(circularCord,permVar(:,:,perm));
             end
         end
+%         disp(['done with time ',num2str(timeVals(timei))])
     end
 end
 
@@ -78,6 +79,7 @@ outputs.clusters = cluster; %the number of electrodes involved in the TW
 outputs.coh = coh;
 
 if ~isempty(nPerm)
-    outputs.pgdPerm = prctile(pgdPerm',0.99);
+    outputs.pgdPerm = pgdPerm;
+%     outputs.pgdPerm = prctile(pgdPerm',0.99);
 end
 end
