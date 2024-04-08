@@ -344,7 +344,7 @@ directions = cell(1,numFrequencyRanges);
                     if refPhaseChoice==1
                         refPhase = circ_mean(tmpPhases);
                     else
-                        refPhase = tmpPhases{j}(refPhaseChoice-1,:);
+                        refPhase = tmpPhases(refPhaseChoice-1,:);
                     end
 
                     for e=1:numGoodElectrodes
