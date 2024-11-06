@@ -38,8 +38,8 @@ myfun = @(slope1,slope2)sqrt((sum(cos(phase-slope1*pos_x-slope2*pos_y)/length(ph
 % angle_range=pi*(0:5:360)/180;
 % spatial_frequency_range=(0:1:18)*pi/180;
 
-angle_range=pi*(0:10:360)/180;
-spatial_frequency_range=(0:1:18)*pi/180;
+angle_range=pi*(0:5:360)/180;
+spatial_frequency_range=(0:10:450)*pi/180;
 
 [angleMatrix,spatial_frequency_Matrix] = meshgrid(angle_range,spatial_frequency_range); % make it to a matrix for arrayfun
 

@@ -133,10 +133,6 @@ uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.5 0.5 0.25 0.5],'St
 hSelectRef = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 0.72 0.2 0.3], ...
     'Style','popup','String',{'Avg',num2str(goodElectrodes')},'FontSize',fontSizeSmall);
 
-% electrodeFraction = 0.6;
-% electrodeChoice = 'all'; % 'all' or 'selected'
-% refPhaseChoice = 'avg'; % choose electrode number
-
 %%%%%%%%%%%%%%%%%%%%  Phase propagation plot panel %%%%%%%%%%%%%%%%%%%%%%%%
 hPanel5 = uipanel('Title','Plot Phase Propagation','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.8 1-panelHeight 0.2 panelHeight]);
 
@@ -241,8 +237,6 @@ directions = cell(1,numFrequencyRanges);
             end
         end
 
-            
-
         % Plot TW stats
         for i = 1:numFrequencyRanges
             
@@ -267,11 +261,19 @@ directions = cell(1,numFrequencyRanges);
             end
             xlim(hSignal(1,i),axisRange1List{2});
             
-            plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
-            axis(hStats(1,i),[axisRange1List{2} -pi pi]);
-
+%             plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
+            speed = [outputsTW{i}.speed;0];
+            speed(speed==inf) = 0;
+            plot(hStats(1,i),timeVals,speed,'color',colorNamesFreqRanges(i,:)); 
+            xlim(hStats(1,i),axisRange1List{2});
+            
+%             tempFreq = [outputsTW{i}.tempFreq;0];
+%             tempFreq(tempFreq==0) = nan;
+%             wrappedAngles = wrapTo360(tempFreq);
+%             plot(hStats(2,i),timeVals,wrappedAngles,'color',colorNamesFreqRanges(i,:));
             plot(hStats(2,i),timeVals,outputsTW{i}.Wavelength,'color',colorNamesFreqRanges(i,:));
-            xlim(hStats(2,i),axisRange1List{2});
+            
+            axis(hStats(2,i),[axisRange1List{2},0 360]);
 
             plot(hStats(3,i),timeVals,outputsTW{i}.coh,'color','r');
             hold(hStats(3,i),'on');

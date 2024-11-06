@@ -8,7 +8,7 @@ if ~exist('param','var');       param = 'sf';                           end
 
 folderName = fullfile(dataPath,subjectName,gridType,expDate,protocolName);
 
-% Get good electrodes
+% Get good electrodes    
 rfData = load([subjectName gridType 'RFData.mat']);
 goodElectrodes = rfData.highRMSElectrodes;
 goodElectrodes = goodElectrodes(goodElectrodes<=81); % Only microelectrodes
@@ -18,6 +18,7 @@ numGoodElectrodes = length(goodElectrodes);
 parameters = load(fullfile(folderName,'extractedData','parameterCombinations.mat'));
 t = load(fullfile(folderName,'segmentedData','LFP','lfpInfo.mat'));
 timeVals = t.timeVals;
+
 
 badTrials = load(fullfile(folderName,'segmentedData','badTrials.mat'));
 badTrials = badTrials.badTrials;
