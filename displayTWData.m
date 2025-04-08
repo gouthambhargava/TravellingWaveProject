@@ -194,6 +194,7 @@ directions = cell(1,numFrequencyRanges);
             outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,elecFrac,'all');
             directions{i} = outputsTW{i}.direction;
         end
+        disp('TW analysis completed');
 
         if ~isequal(selectedElectrodes0,selectedElectrodes)
             showRFPositionsSelectedElectrodes(hGridPlots(1,:),goodElectrodes,selectedElectrodes0,rfData,parameters,colorNamesElectrodes);
@@ -261,19 +262,19 @@ directions = cell(1,numFrequencyRanges);
             end
             xlim(hSignal(1,i),axisRange1List{2});
             
-%             plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
-            speed = [outputsTW{i}.speed;0];
+            plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
+            speed = [outputsTW{i}.speed];
             speed(speed==inf) = 0;
             plot(hStats(1,i),timeVals,speed,'color',colorNamesFreqRanges(i,:)); 
             xlim(hStats(1,i),axisRange1List{2});
             
-%             tempFreq = [outputsTW{i}.tempFreq;0];
-%             tempFreq(tempFreq==0) = nan;
-%             wrappedAngles = wrapTo360(tempFreq);
-%             plot(hStats(2,i),timeVals,wrappedAngles,'color',colorNamesFreqRanges(i,:));
-            plot(hStats(2,i),timeVals,outputsTW{i}.Wavelength,'color',colorNamesFreqRanges(i,:));
+             tempFreq = [outputsTW{i}.tempFreq];
+             tempFreq(tempFreq==0) = nan;
+             wrappedAngles = wrapTo360(tempFreq);
+             plot(hStats(2,i),timeVals,[wrappedAngles,nan],'color',colorNamesFreqRanges(i,:));
+            % plot(hStats(2,i),timeVals,outputsTW{i}.Wavelength,'color',colorNamesFreqRanges(i,:));
             
-            axis(hStats(2,i),[axisRange1List{2},0 360]);
+            axis(hStats(2,i),[axisRange1List{2},0 100]);
 
             plot(hStats(3,i),timeVals,outputsTW{i}.coh,'color','r');
             hold(hStats(3,i),'on');
@@ -309,10 +310,10 @@ directions = cell(1,numFrequencyRanges);
             % Initialize
             for j=1:numFrequencyRanges
                 for k=1:size(hSignal,1)
-                    xLinesSignal(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2); %#ok<*AGROW>
+                    xLinesSignal(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2,'Color','black'); %#ok<*AGROW>
                 end
                 for k=1:size(hStats,1)
-                    xLinesStats(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hStats(k,j),'YLim'),'parent',hStats(k,j),'LineWidth',2);
+                    xLinesStats(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hStats(k,j),'YLim'),'parent',hStats(k,j),'LineWidth',2,'Color','black');
                 end
             end
 
@@ -334,11 +335,11 @@ directions = cell(1,numFrequencyRanges);
                     % Delete old lines and create new ones
                     for k=1:size(hSignal,1)
                         delete(xLinesSignal(k,j));
-                        xLinesSignal(k,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2);
+                        xLinesSignal(k,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2,'Color','black');
                     end
                     for k=1:size(hStats,1)
                         delete(xLinesStats(k,j));
-                        xLinesStats(k,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hStats(k,j),'YLim'),'parent',hStats(k,j),'LineWidth',2);
+                        xLinesStats(k,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hStats(k,j),'YLim'),'parent',hStats(k,j),'LineWidth',2,'Color','black');
                     end
 
                     % plot absolute phases

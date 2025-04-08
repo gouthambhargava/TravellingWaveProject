@@ -1,6 +1,6 @@
 % This code runs the main display program (displayTWData)
 %% select data of particular orientation
-% dataPath = 'G:\alpa\data';
+% dataPath = 'G:\monkeyData\data';
 dataPath = 'N:\Projects\Bhargava_TravelingWaveProject\data';
 gridType = 'Microelectrode';
 
