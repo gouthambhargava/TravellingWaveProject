@@ -119,15 +119,16 @@ for ii=1:numFrequencyRanges
 end
 
 %%%%%%%%%%%%%%%%%%%%  Traveling Wave plot panel %%%%%%%%%%%%%%%%%%%%%%%%
-%this needs to be still be implemented
+
 hPanel4 = uipanel('Title','Traveling Wave','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.6 1-panelHeight 0.2 panelHeight]);
 uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0.5 0.25 0.5],'Style','text','String','Electrode Fraction','FontSize',fontSizeSmall);
 hElecFrac = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.25 0.7 0.2 0.3], ...
     'Style','edit','String','0.6','FontSize',fontSizeSmall);
 
+electrodeChoices = {'all','selected'};
 uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0 0.25 0.5],'Style','text','String','Select Electrodes','FontSize',fontSizeSmall);
 hSelectElec = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.25 0.2 0.2 0.3], ...
-    'Style','popup','String',{'All','Selected'},'FontSize',fontSizeSmall);
+    'Style','popup','String',electrodeChoices,'FontSize',fontSizeSmall);
 
 uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.5 0.5 0.25 0.5],'Style','text','String','Ref Choice','FontSize',fontSizeSmall);
 hSelectRef = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 0.72 0.2 0.3], ...
@@ -168,16 +169,7 @@ directions = cell(1,numFrequencyRanges);
         
         %get burst fraction statistics
         elecFrac = str2double(get(hElecFrac,'string'));
-        if get(hSelectElec,'val') == 2
-            elecFrac = 0;
-        end
-        
-        for i = 1:numFrequencyRanges
-            burstFrac{i} = nansum(squeeze(burstTS(:,trialNum,:,i)));
-            sigValues = burstFrac{i}>numGoodElectrodes*elecFrac;
-            burstFrac{i}(sigValues) = 1;
-            burstFrac{i}(setdiff(1:length(burstFrac{i}),find(sigValues))) = nan;
-        end
+        elecChoice = electrodeChoices{get(hSelectElec,'val')};
 
         % Calculate TW parameters
         disp('Getting TW parameters');
@@ -191,7 +183,7 @@ directions = cell(1,numFrequencyRanges);
             tmp = squeeze(burstTS(:,trialNum,:,i));
             tmp(isnan(tmp)) = 0;
             burstMatrix{i} = tmp;
-            outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,elecFrac,'all');
+            outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,elecFrac,elecChoice);
             directions{i} = outputsTW{i}.direction;
         end
         disp('TW analysis completed');
@@ -241,27 +233,15 @@ directions = cell(1,numFrequencyRanges);
         % Plot TW stats
         for i = 1:numFrequencyRanges
             
-            %get burst durations
-            burstSeg = burstFrac{i};
-            burstSeg(isnan(burstSeg)) = 0;
-            indices = find(burstSeg==0);
-            dirLimits1 = find(diff(indices)>1)';
-            dirLimits2 = [indices(dirLimits1)+1;indices(dirLimits1+1)-1]';
-            dirLimits2(find((dirLimits2(:,2)-dirLimits2(:,1))<10),:) = [];
-            colors = parula(size(dirLimits2,1));
-            
-            %Plot bursts
+            % Plot bursts
             chanVals = repmat((1:numel(goodElectrodes))',1,size(burstTS,3))';
             plot(timeVals,squeeze(burstTS(:,trialNum,:,i))'+chanVals-1,'parent',hSignal(1,i),'color','r','linewidth',1);
             hold(hSignal(1,i),'on');
-            for j = 1:size(dirLimits2,1)
-                burstTemp = nan(1,length(timeVals));
-                burstTemp(dirLimits2(j,1):dirLimits2(j,2)) = 1;
-                plot(timeVals,burstTemp*79,'|','parent',hSignal(1,i),'color',colors(j,:),'linewidth',1);
-                hold(hSignal(1,i),'on');
-            end
+
+            % Show time points where the grid as a whole has bursts
+            plot(hSignal(1,i),timeVals(mean(burstMatrix{i})>elecFrac),numel(goodElectrodes)+1,'k*');
             xlim(hSignal(1,i),axisRange1List{2});
-            
+
             plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
             speed = [outputsTW{i}.speed];
             speed(speed==inf) = 0;
@@ -285,11 +265,14 @@ directions = cell(1,numFrequencyRanges);
 %           yline(hStats(3,i),elecFrac,'color','b');
             line(axisRange1List{2},[elecFrac elecFrac],'parent',hStats(3,i),'color','b');
             axis(hStats(3,i),[axisRange1List{2} 0 1]);
-            
-            %Plot angle plots for calculated directions
-            for duri = 1:size(dirLimits2,1)
-                polarPlotTW(hGridPlots2(3,i),directions{i}(dirLimits2(duri,1):dirLimits2(duri,2)),10,colors(duri,:));
-            end   
+
+            % % Get information about waveSegments
+            % getWaveSegments(outputsTW{i},timeVals,wobbleReq);
+            % 
+            % % Plot angle plots for calculated directions
+            % for duri = 1:size(dirLimits2,1)
+            %     polarPlotTW(hGridPlots2(3,i),directions{i}(dirLimits2(duri,1):dirLimits2(duri,2)),10,colors(duri,:));
+            % end   
         end
     end
 
