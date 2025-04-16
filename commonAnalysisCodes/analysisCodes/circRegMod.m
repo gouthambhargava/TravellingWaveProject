@@ -1,4 +1,4 @@
-function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,linearV)
+function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,linearV,angleRange,sfLimit)
 % circ_lin_regress_2D is a function used to fit a 2D linear variables to a
 % circular variable. One exmaple of the application is to fit phase traveling wave
 % from linear coordinates.
@@ -21,6 +21,21 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % variable is explained by the regression model. To access the statitical
 % significace, please perform a permutaion procedure.
 % from https://github.com/erfanzabeh/WaveMonk
+
+% additional inputs - these specify the grid over which direction of wave
+% will be calculated and the spatial frequency grid
+% define them as a range of values. Ex.
+% angleRange=[0:5:360];
+% for calculating sfRange, specify the interelectrode distance in mm. Is
+% set to 0.4mm by default (MEA interelectrode distance)
+if nargin<3
+    angleRange = 0:5:360;
+end
+if nargin<4
+    sfLimit = 0.4;
+end
+sfRange = 0:10:180/sfLimit;
+
 %%
 pos_x = linearV(:,1);
 pos_y = linearV(:,2);
@@ -35,11 +50,8 @@ myfun = @(slope1,slope2)sqrt((sum(cos(phase-slope1*pos_x-slope2*pos_y)/length(ph
 % limit of spatial frequency is depend on the spatial nyquist
 % frequency. 
 
-% angle_range=pi*(0:5:360)/180;
-% spatial_frequency_range=(0:1:18)*pi/180;
-
-angle_range=pi*(0:5:360)/180;
-spatial_frequency_range=(0:10:450)*pi/180;
+angle_range=pi*angleRange/180;
+spatial_frequency_range=sfRange*pi/180;
 
 [angleMatrix,spatial_frequency_Matrix] = meshgrid(angle_range,spatial_frequency_range); % make it to a matrix for arrayfun
 

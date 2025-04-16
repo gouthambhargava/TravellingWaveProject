@@ -15,7 +15,7 @@
 % analyses are therefore done upfront even though results are shown only
 % for some electrodes and trials.
 
-function displayTWData(subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList)
+function displayTWData(subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,stimPeriod,lengthLimit)
 
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;
 backgroundColor = 'w'; panelHeight = 0.125;
@@ -30,7 +30,7 @@ disp('Getting data...');
 numGoodElectrodes = length(goodElectrodes);
 
 %%%%%%%%%%%%%%%%%%%%%%% Do burst estimation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-thresholdFactor = 4;
+thresholdFactor = 3;
 stimulusDurationS = [0 0.8]; % Stimulus duration to be highlighted
 baselinePeriodS = [-0.5 0];
 stimulusPeriodS = [0.25 0.75];
@@ -47,7 +47,8 @@ if strcmp(analysisMethod,'hilbert')
         end
     end
 else
-    %add matching pursuit 
+    %reserved for adding other methods (such as frequency sliding or PSD
+    %based freq selection) which might be more useful for EEG.
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Plot RF information %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,8 +63,8 @@ for iElec = 1:numGoodElectrodes
     [locList(iElec,1),locList(iElec,2)] = find(electrodeArray==goodElectrodes(iElec));
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%  Data selection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hPanel1 = uipanel('Title','Data','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0 1-panelHeight 0.2 panelHeight]);
+%% %%%%%%%%%%%%%%%%%%%%%%%%%  Data selection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+hPanel1 = uipanel('Title','Data','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0 1-panelHeight 0.18 panelHeight]);
 
 % Selected electrodes
 uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0 0.5 0.25 0.5],'Style','text','String','Elecs','FontSize',fontSizeMedium);
@@ -71,17 +72,17 @@ hElectrodes = uicontrol('Parent',hPanel1,'Unit','Normalized','BackgroundColor', 
 
 % Trial Number
 numTrials = size(allData,2);
-uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0 0 0.25 0.5],'Style','text','String','TrialNum','FontSize',fontSizeMedium);
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0 0 0.25 0.5],'Style','text','String','Trial','FontSize',fontSizeMedium);
 trialNumList = 1:numTrials;
 hTrial = uicontrol('Parent',hPanel1,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.25 0 0.15 0.5],'Style','popup','String',trialNumList,'FontSize',fontSizeMedium);
 
 % Plot data
-uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.4 0 0.2 0.5],'Style','pushbutton','String','plot','FontSize',fontSizeMedium,'Callback',{@plot_Callback});
-uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.6 0 0.2 0.5],'Style','pushbutton','String','Rescale','FontSize',fontSizeMedium,'Callback',{@rescale_Callback});
-uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.8 0 0.2 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeMedium,'Callback',{@cla_Callback});
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.4 0 0.2 0.5],'Style','pushbutton','String','plot','FontSize',fontSizeSmall,'Callback',{@plot_Callback});
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.6 0 0.2 0.5],'Style','pushbutton','String','Rescale','FontSize',fontSizeSmall,'Callback',{@rescale_Callback});
+uicontrol('Parent',hPanel1,'Unit','Normalized','Position',[0.8 0 0.2 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeSmall,'Callback',{@cla_Callback});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Axis Ranges %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hPanel2 = uipanel('Title','AxisRanges1','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.2 1-panelHeight 0.2 panelHeight]);
+hPanel2 = uipanel('Title','AxisRanges1','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.18 1-panelHeight 0.15 panelHeight]);
 axisRange1List0{1} = [0 80]; axisRange1Name{1} = 'FreqLims (Hz)';
 axisRange1List0{2} = [-0.5 1]; axisRange1Name{2} = 'TimeLims (S)';
 axisRange1List0{3} = [-2 2]; axisRange1Name{3} = 'cLims (raw)';
@@ -98,7 +99,7 @@ for ii=1:numAxisRanges1
         'Style','edit','String',num2str(axisRange1List0{ii}(2)),'FontSize',fontSizeSmall);
 end
 
-hPanel3 = uipanel('Title','AxisRanges2','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.4 1-panelHeight 0.2 panelHeight]);
+hPanel3 = uipanel('Title','AxisRanges2','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.33 1-panelHeight 0.16 panelHeight]);
 
 axisRange2List0 = cell(1,numFrequencyRanges);
 axisRange2Name = cell(1,numFrequencyRanges);
@@ -120,18 +121,37 @@ end
 
 %%%%%%%%%%%%%%%%%%%%  Traveling Wave plot panel %%%%%%%%%%%%%%%%%%%%%%%%
 
-hPanel4 = uipanel('Title','Traveling Wave','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.6 1-panelHeight 0.2 panelHeight]);
-uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0.5 0.25 0.5],'Style','text','String','Electrode Fraction','FontSize',fontSizeSmall);
-hElecFrac = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.25 0.7 0.2 0.3], ...
+hPanel4 = uipanel('Title','Traveling Wave','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.49 1-panelHeight 0.31 panelHeight]);
+
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0.5 0.2 0.5],'Style','text','String','Electrode Fraction','FontSize',fontSizeSmall);
+hElecFrac = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.2 0.7 0.15 0.3], ...
     'Style','edit','String','0.6','FontSize',fontSizeSmall);
 
-electrodeChoices = {'all','selected'};
-uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0 0.25 0.5],'Style','text','String','Select Electrodes','FontSize',fontSizeSmall);
-hSelectElec = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.25 0.2 0.2 0.3], ...
+electrodeChoices = {'selected','all'};
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0 0 0.2 0.5],'Style','text','String','Select Electrodes','FontSize',fontSizeSmall);
+hSelectElec = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.2 0.2 0.15 0.3], ...
     'Style','popup','String',electrodeChoices,'FontSize',fontSizeSmall);
 
-uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.5 0.5 0.25 0.5],'Style','text','String','Ref Choice','FontSize',fontSizeSmall);
-hSelectRef = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.75 0.72 0.2 0.3], ...
+waveSegOptions = {'Simple Segmentation','Point-point wobble','Full segment wobble','Wave strength'};
+% note - wave strength is to be implemented for cluster wise PGD/direction
+% calculation - for EEG
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.37 0.55 0.15 0.5],'Style','text','String','Wave Seg Option','FontSize',fontSizeSmall);
+hSegReq = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.52 0.7 0.15 0.3], ...
+    'Style','popup','String',waveSegOptions,'FontSize',fontSizeSmall);
+
+waveMethods = {'Simple circLin regression','Cluster circLin regression'};
+% current version only performs simple circular linear regression - cluster
+% based circlinear regression to be implemented for EEG.
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.37 0 0.15 0.5],'Style','text','String','Wave Detection','FontSize',fontSizeSmall);
+hWaveMethod = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.52 0.2 0.15 0.3], ...
+    'Style','popup','String',waveMethods,'FontSize',fontSizeSmall);
+
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.68 0.55 0.15 0.5],'Style','text','String','Wave wobble','FontSize',fontSizeSmall);
+hWobbleReq = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.83 0.7 0.15 0.3], ...
+    'Style','edit','String','5','FontSize',fontSizeSmall);
+
+uicontrol('Parent',hPanel4,'Unit','Normalized','Position',[0.68 0 0.15 0.5],'Style','text','String','Ref Choice','FontSize',fontSizeSmall);
+hSelectRef = uicontrol('Parent',hPanel4,'Unit','Normalized','BackgroundColor', backgroundColor,'Position',[0.83 0.2 0.15 0.3], ...
     'Style','popup','String',{'Avg',num2str(goodElectrodes')},'FontSize',fontSizeSmall);
 
 %%%%%%%%%%%%%%%%%%%%  Phase propagation plot panel %%%%%%%%%%%%%%%%%%%%%%%%
@@ -147,7 +167,7 @@ hTimeRangePropMax = uicontrol('Parent',hPanel5,'Unit','Normalized','BackgroundCo
 plotToggle = uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0 0 0.5 0.5],'Style','togglebutton','String','Plot/Pause','FontSize',fontSizeMedium,'Callback',{@plot_Callback2},'Value',0);
 uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0.5 0 0.5 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeMedium,'Callback',{@cla_Callback2});
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Plot handles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%% Plot handles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hTF = getPlotHandles(numSelectedElectrodes+1,2,[0.025 0.05 0.3 0.55],0.025,0.025);
 hSignal = getPlotHandles(numSelectedElectrodes+1,numFrequencyRanges,[0.35 0.05 0.425 0.55],0.025,0.025);
 hStats = getPlotHandles(3,numFrequencyRanges,[0.35 0.625 0.425 0.225],0.025,0.01);
@@ -159,14 +179,22 @@ plotTFMT(hTF(1,1),allData,timeVals,axisRange1List0,freqRangeList,colorNamesFreqR
 phaseMatrix = cell(1,numFrequencyRanges);
 outputsTW = cell(1,numFrequencyRanges);
 state = 0; % state variable to display the phases
-directions = cell(1,numFrequencyRanges);
+% directions = cell(1,numFrequencyRanges);
+waveVector = cell(1,numFrequencyRanges);
+uniqueDirs = cell(1,numFrequencyRanges);
+waveBounds = cell(1,numFrequencyRanges);
+burstMatrix = cell(1,numFrequencyRanges);
 
     function plot_Callback(~,~)
 
         % Data choices
         selectedElectrodes0 = str2num(get(hElectrodes,'String')); %#ok<ST2NM>
         trialNum = trialNumList((get(hTrial,'val')));
-        
+        wobbleLim = str2double(get(hWobbleReq,'String'));
+        segOption = get(hSegReq,'val');
+        waveMethod = get(hWaveMethod,'String'); % to be implemented in future versions
+
+
         %get burst fraction statistics
         elecFrac = str2double(get(hElecFrac,'string'));
         elecChoice = electrodeChoices{get(hSelectElec,'val')};
@@ -174,17 +202,12 @@ directions = cell(1,numFrequencyRanges);
         % Calculate TW parameters
         disp('Getting TW parameters');
 
-        phaseMatrix = cell(1,numFrequencyRanges);
-        burstMatrix = cell(1,numFrequencyRanges);
-        outputsTW = cell(1,numFrequencyRanges);
-
         for i = 1:numFrequencyRanges
             phaseMatrix{i} = angle(hilbert(squeeze(filteredSignal(:,trialNum,:,i))'))';
-            tmp = squeeze(burstTS(:,trialNum,:,i));
-            tmp(isnan(tmp)) = 0;
-            burstMatrix{i} = tmp;
+            burstMatrix{i} = squeeze(burstTS(:,trialNum,:,i));
             outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,elecFrac,elecChoice);
-            directions{i} = outputsTW{i}.direction;
+            [waveVector{i},uniqueDirs{i},waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,segOption,stimPeriod,lengthLimit);
+            % directions{i} = outputsTW{i}.direction;
         end
         disp('TW analysis completed');
 
@@ -239,40 +262,41 @@ directions = cell(1,numFrequencyRanges);
             hold(hSignal(1,i),'on');
 
             % Show time points where the grid as a whole has bursts
-            plot(hSignal(1,i),timeVals(mean(burstMatrix{i})>elecFrac),numel(goodElectrodes)+1,'k*');
+            plot(hSignal(1,i),timeVals(nanmean(burstMatrix{i})>elecFrac),numel(goodElectrodes)+1,'k*');
             xlim(hSignal(1,i),axisRange1List{2});
 
-            plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
-            speed = [outputsTW{i}.speed];
-            speed(speed==inf) = 0;
-            plot(hStats(1,i),timeVals,speed,'color',colorNamesFreqRanges(i,:)); 
-            xlim(hStats(1,i),axisRange1List{2});
-            
-             tempFreq = [outputsTW{i}.tempFreq];
-             tempFreq(tempFreq==0) = nan;
-             wrappedAngles = wrapTo360(tempFreq);
-             plot(hStats(2,i),timeVals,[wrappedAngles,nan],'color',colorNamesFreqRanges(i,:));
+            % plot different wave segments with the bursts - colored individually
+            colorVals = parula(size(waveBounds{i},2));
+            for k = 1:size(waveBounds{i},2)
+                plot(hSignal(1,i),timeVals(waveBounds{i}(1,k):waveBounds{i}(2,k)),0,'|','Color',colorVals(k,:));
+            end
+
+            % plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
+            plot(hStats(1,i),timeVals,outputsTW{i}.speed,'color',colorNamesFreqRanges(i,:));
+            axis(hStats(1,i),[axisRange1List{2},0 0.8]);
+
+            % tempFreq = [outputsTW{i}.tempFreq];
+            % tempFreq(tempFreq==0) = nan;
+            % wrappedAngles = wrapTo360(tempFreq);
+            plot(hStats(2,i),timeVals,outputsTW{i}.tempFreq,'color',colorNamesFreqRanges(i,:));
             % plot(hStats(2,i),timeVals,outputsTW{i}.Wavelength,'color',colorNamesFreqRanges(i,:));
-            
+
             axis(hStats(2,i),[axisRange1List{2},0 100]);
 
             plot(hStats(3,i),timeVals,outputsTW{i}.coh,'color','r');
             hold(hStats(3,i),'on');
             plot(hStats(3,i),timeVals,abs(mean(exp(1i*phaseMatrix{i}))),'color','m');
-            plot(hStats(3,i),timeVals,mean(burstMatrix{i}),'color','k');
+            plot(hStats(3,i),timeVals,outputsTW{i}.burstVec,'color','k');
             plot(hStats(3,i),timeVals,outputsTW{i}.pgd,'color','g');
             hold(hStats(3,i),'on');
 %           yline(hStats(3,i),elecFrac,'color','b');
             line(axisRange1List{2},[elecFrac elecFrac],'parent',hStats(3,i),'color','b');
             axis(hStats(3,i),[axisRange1List{2} 0 1]);
 
-            % % Get information about waveSegments
-            % getWaveSegments(outputsTW{i},timeVals,wobbleReq);
-            % 
-            % % Plot angle plots for calculated directions
-            % for duri = 1:size(dirLimits2,1)
-            %     polarPlotTW(hGridPlots2(3,i),directions{i}(dirLimits2(duri,1):dirLimits2(duri,2)),10,colors(duri,:));
-            % end   
+            % Plot angle plots for calculated directions 
+            makePolarPlot({waveVector{i}(~isnan(waveVector{i}))},10,hGridPlots2(3,i),[0.7 0.7 0.7])
+            hold(hGridPlots2(3,i),'on')
+            makePolarPlot(num2cell(uniqueDirs{i}),10,hGridPlots2(3,i),colorVals)
         end
     end
 
@@ -348,7 +372,7 @@ directions = cell(1,numFrequencyRanges);
                     caxis(hGridPlots2(2,j),[-pi pi]);
                     colorbar(hGridPlots2(2,j),'northoutside');
                     hold(hGridPlots2(2,j),'on')
-                    directionGrid = repmat(directions{j}(timeRangeProp(ind)),size(tmpMatrix2,1),size(tmpMatrix2,2));
+                    directionGrid = repmat(waveVector{j}(timeRangeProp(ind)),size(tmpMatrix2,1),size(tmpMatrix2,2));
                     U = real(exp(1i*directionGrid));
                     V = imag(exp(1i*directionGrid));
                     quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(2,j))
@@ -394,114 +418,6 @@ directions = cell(1,numFrequencyRanges);
     end
 end
 
-% Electrode location and display
-function stimElectrode = showElectrodeRFs(hPlot,goodElectrodes,colorName,rfData,parameters)
-aValsUnique = parameters.aValsUnique;
-eValsUnique = parameters.eValsUnique;
-
-N = length(goodElectrodes);
-rfAziList = zeros(1,N);
-rfEleList = zeros(1,N);
-
-axes(hPlot);
-hold(hPlot,'on');
-for i=1:N
-    rfAziList(i) = rfData.rfStats(goodElectrodes(i)).meanAzi;
-    rfEleList(i) = rfData.rfStats(goodElectrodes(i)).meanEle;
-    plot(hPlot,rfAziList(i),rfEleList(i),'marker','+','color',colorName);
-    text(rfAziList(i),rfEleList(i),num2str(goodElectrodes(i)),'color',colorName,'fontsize',8);
-end
-plot(aValsUnique,eValsUnique,'rs','markerfacecolor','r');
-
-distanceList = sqrt((aValsUnique-rfAziList).^2+(eValsUnique-rfEleList).^2);
-stimElectrode = goodElectrodes(distanceList==min(distanceList));
-end
-function electrodeArray = showElectrodePositions(hPlot,highlightElectrodes,colorNames,hideElectrodeNums)
-
-if ~exist('highlightElectrodes','var'); highlightElectrodes=[];         end
-if ~exist('colorNames','var');          colorNames=[];                  end
-if ~exist('hideElectrodeNums','var');    hideElectrodeNums=0;           end
-
-electrodeArray = ...
-    [81 72 63 54 45 36 27 18 09;
-    80 71 62 53 44 35 26 17 08;
-    79 70 61 52 43 34 25 16 07;
-    78 69 60 51 42 33 24 15 06;
-    77 68 59 50 41 32 23 14 05;
-    76 67 58 49 40 31 22 13 04;
-    75 66 57 48 39 30 21 12 03;
-    74 65 56 47 38 29 20 11 02;
-    73 64 55 46 37 28 19 10 01];
-
-[numRows,numCols] = size(electrodeArray);
-
-axes(hPlot);
-dX = 1/numCols;
-dY = 1/numRows;
-
-lineXRow = zeros(2,numRows);lineYRow = zeros(2,numRows);
-for i=1:numRows
-    lineXRow(:,i) = [0 1]; lineYRow(:,i) = [i*dY i*dY];
-end
-lineXCol = zeros(2,numCols);lineYCol = zeros(2,numCols);
-for i=1:numCols
-    lineXCol(:,i) = [i*dX i*dX]; lineYCol(:,i) = [0 1];
-end
-line(lineXRow,lineYRow,'color','k'); hold on;
-line(lineXCol,lineYCol,'color','k');
-hold off;
-
-if ~isempty(highlightElectrodes)
-    for i=1:length(highlightElectrodes)
-        highlightElectrode=highlightElectrodes(i);
-
-        [highlightRow,highlightCol] = find(highlightElectrode==electrodeArray);
-
-        % Create patch
-        patchX = (highlightCol-1)*dX;
-        patchY = (numRows-highlightRow)*dY;
-        patchLocX = [patchX patchX patchX+dX patchX+dX];
-        patchLocY = [patchY patchY+dY patchY+dY patchY];
-
-        if iscell(colorNames)
-            patch('XData',patchLocX,'YData',patchLocY,'FaceColor',colorNames{i});
-        else
-            patch('XData',patchLocX,'YData',patchLocY,'FaceColor',colorNames);
-        end
-    end
-end
-
-if ~hideElectrodeNums
-    % Write electrode numbers
-    for i=1:numRows
-        textY = (numRows-i)*dY + dY/2;
-        for j=1:numCols
-            textX = (j-1)*dX + dX/2;
-            if electrodeArray(i,j)>0
-                text(textX,textY,num2str(electrodeArray(i,j)),'HorizontalAlignment','center');
-            end
-        end
-    end
-end
-
-set(hPlot,'XTickLabel',[],'YTickLabel',[]);
-end
-
-function electrodeArray = showRFPositionsSelectedElectrodes(hRFPlots,goodElectrodes,selectedElectrodes,rfData,parameters,colorNames)
-cla(hRFPlots(1)); cla(hRFPlots(2));
-showElectrodeRFs(hRFPlots(1),goodElectrodes,'k',rfData,parameters);
-
-electrodeArray = showElectrodePositions(hRFPlots(2),[],[]);
-showElectrodePositions(hRFPlots(2),setdiff(electrodeArray,goodElectrodes),'k');
-
-for i=1:length(selectedElectrodes)
-    showElectrodeRFs(hRFPlots(1),selectedElectrodes(i),colorNames(i,:),rfData,parameters);
-    showElectrodePositions(hRFPlots(2),selectedElectrodes(i),colorNames(i,:));
-end
-xlabel(hRFPlots(1),'Azimuth (deg)');
-ylabel(hRFPlots(1),'Elevation (deg)');
-end
-
 % Limits & rescaling
 function rescaleGivenPlotHandle(plotHandles,axisLims)
 [numRows,numCols] = size(plotHandles);
@@ -521,107 +437,4 @@ for i=1:numRows
 end
 end
 
-% Time-frequency analysis
-function plotTFMT(hTF,data,timeVals,axisRanges,freqRangeHz,colorNames,type,trialNo,stimulusPeriodS)
-% supply data in the form channels x trials x times
-% set trialNo to [] if all channels are needed
 
-Fs = round(1/(timeVals(2)-timeVals(1)));
-
-if ~isempty(trialNo)
-    data = data(:,trialNo,:);
-end
-
-% TF options
-movingwin = [0.25 0.025];
-params.tapers = [1 1];
-params.pad = -1;
-params.Fs = Fs;
-params.fpass = [0 200];
-params.trialave = 1; % averaging across trials
-blRange = [-0.5 0];
-
-% Time frequency analysis with multitapers
-for j = 1:size(data,1)
-    [S,timeTF,freqVals] = mtspecgramc(squeeze(data(j,:,:))',movingwin,params);
-    logPower(:,:,j) = log10(S);
-end
-xValToPlot = timeTF+timeVals(1)-1/Fs;
-
-logPower = mean(logPower,3);
-
-if strcmp(type,'delta')
-    blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
-    logBLPower = repmat(mean(logPower(blPos,:,:),1),length(xValToPlot),1);
-    deltaPower = 10*(logPower - logBLPower);
-    pcolor(hTF,xValToPlot,freqVals,deltaPower');
-else
-    pcolor(hTF,xValToPlot,freqVals,logPower');
-end
-
-shading(hTF,'interp');
-colormap(hTF,'jet');
-axis(hTF,[axisRanges{2} axisRanges{1}]);
-caxis(hTF,axisRanges{3});
-
-% Indicate frequency ranges of interest
-numRanges = length(freqRangeHz);
-for j=1:numRanges
-    line([axisRanges{2}],[freqRangeHz{j}(1) freqRangeHz{j}(1)],'color',colorNames(j,:),'parent',hTF);
-    line([axisRanges{2}],[freqRangeHz{j}(2) freqRangeHz{j}(2)],'color',colorNames(j,:),'parent',hTF);
-end
-
-if ~isempty(stimulusPeriodS)
-    line([stimulusPeriodS(1) stimulusPeriodS(1)],[axisRanges{1}],'color','k','parent',hTF);
-    line([stimulusPeriodS(2) stimulusPeriodS(2)],[axisRanges{1}],'color','k','parent',hTF);
-end
-end
-
-function polarPlotTW(axes,phaseValues,binWidth,color)
-
-%bin the data and get counts
-nBins = 360/binWidth;
-allBins = linspace(0,360,nBins);
-wrappedAngles = wrapTo360(rad2deg(phaseValues));
-binnedVals = discretize(wrappedAngles,allBins);
-binnedVals(isnan(binnedVals)) = [];
-uniqueVals = unique(binnedVals);
-
-counts = zeros(1,numel(uniqueVals));
-for i = 1:numel(uniqueVals)
-    counts(uniqueVals(i)) = numel(find(binnedVals==uniqueVals(i)));
-end
-counts = counts/max(counts); %normalize counts 
-
-%plot the counts
-%get bin co-ordinates
-binCord = exp(1i*deg2rad([allBins,allBins(2)]));
-
-for i = 1:numel(counts)
-    xcords = counts(i)*[real(binCord(i)),real(binCord(i+1))];
-    ycords = counts(i)*[imag(binCord(i)),imag(binCord(i+1))];
-    patch([0 xcords 0],[0 ycords 0],color,'parent',axes)
-    hold(axes,'on')
-end
-
-line([-1 1],[0 0],'Color',[0.811764705882353,0.811764705882353,0.811764705882353],'parent',axes)
-line([0 0],[-1 1],'Color',[0.811764705882353,0.811764705882353,0.811764705882353],'parent',axes)
-circle(axes,0,0,1,[0,0,0]);
-circle(axes,0,0,0.5,[0.811764705882353,0.811764705882353,0.811764705882353]);
-axis(axes,[-1,1,-1,1])
-text(1.01,0,['0',char(176)],'parent',axes)
-text(0,1.05,['90',char(176)],'parent',axes)
-text(-1.2,0,['180',char(176)],'parent',axes)
-text(0,-1.05,['270',char(176)],'parent',axes)
-axis(axes,'square')
-axis(axes,'off')
-
-    function circle(axes,x,y,r,colorVal)
-        hold(axes,'on')
-        th = 0:pi/50:2*pi;
-        xunit = r * cos(th) + x;
-        yunit = r * sin(th) + y;
-        plot(axes,xunit, yunit,'Color',colorVal);
-        hold(axes,'off')
-    end
-end

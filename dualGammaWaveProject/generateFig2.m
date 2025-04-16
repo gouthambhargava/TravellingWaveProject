@@ -1,13 +1,12 @@
 %% generate fig 2
-
-dataPath = 'F:\monkeyData\data';
+% load data
+dataPath = 'G:\monkeyData\data';
 gridType = 'Microelectrode';
 subjectName='alpaH'; expDate = '210817'; protocolName = 'GRF_002'; 
 sPos = 2; % spatial frequency: 0.5 (1), 1(2), 2 (3), 4 (4), 8 (5), all SFs (6). Note that the same code can be used for the size project also later where stimulus size is changed instead of spatial frequency
 oriPos = 4; % orientation: 0 (1), 22.5 (2), 45 (3), 67.5 (4), 90 (5), 112.5 (6), 135 (7), 157.5 (8), all orientations (9)
 [mData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
 freqRangeList{1} = [20 35]; freqRangeList{2} = [40 60];
-thresh = 50;
 % get burst data 
 % burst calculation parameters
 thresholdFactor = 3;
@@ -30,10 +29,57 @@ burstFrac = squeeze(sum(bursts))*100/numel(goodElectrodes);
 burstFrac(burstFrac<thresh) = 0;
 burstFrac(burstFrac==0) = nan;
 burstFrac(~isnan(burstFrac)) = 1;
-%% get overlapping TW's
-outputsTW = outputsTWA24;
+
+% get outputs for M1
+% get list of electrode locations
+numGoodElectrodes = numel(goodElectrodes);
+electrodeArray = rot90(reshape(1:81,[9,9]),2); %set the grid layout
+locList = nan(numGoodElectrodes,2);
+for iElec = 1:numGoodElectrodes
+    [locList(iElec,1),locList(iElec,2)] = find(electrodeArray==goodElectrodes(iElec));
+end
+
+% calculate TW parameters
+tic
+outputsTW = cell(numFrequencyRanges,numTrials);
+for i = 1:numTrials
+    for j = 1:numFrequencyRanges
+        burstMat = squeeze(burstTS(:,i,:,j));
+        phiMat = angle(hilbert(squeeze(filteredSignal(:,i,:,j))'))';
+        outputsTW{j,i} = getTWCircParams(phiMat,burstMat,timeVals,goodElectrodes,locList,electrodeFraction,'selected');
+    end
+end
+toc
+% define some parameters for wave detection
+lengthLimit = 25; %ms
 boundryLims = [0.25 0.75];
-wobble = 2;
+wobbleLim = 5; %degree
+segOption = 3;
+numFrequencyRanges = size(outputsTW,1);
+
+% segment waves and get overlapping waves for all trials
+%initialize outputs
+waveVector = nan(numTrials,length(timeVals),numFrequencyRanges);
+uniqueDirs = cell(numFrequencyRanges,numTrials);
+waveBounds = cell(numFrequencyRanges,numTrials);
+for i = 1:numTrials
+    for j = 1:numFrequencyRanges
+    [waveVector(i,:,j),uniqueDirs{j,i},waveBounds{j,i}] = getWaveSegments(outputsM1{j,i},timeVals,wobbleLim,segOption,boundryLims, lengthLimit);
+    end
+end
+
+% find overlapping waves 
+allUniqueDirs = [];
+dirSG = nan(numTrials,length(timeVals));
+dirFG = nan(numTrials,length(timeVals));
+overlap = 0.5;
+for i = 1:numTrials
+    [~,dirSG(i,:),dirFG(i,:),uniqueDirs] = getOverlappingWaves(waveVector(i,:,1),waveBounds{1,i},waveVector(i,:,2),waveBounds{2,i},overlap);
+    allUniqueDirs = cat(2,allUniqueDirs,uniqueDirs);
+end
+
+%% get overlapping TW's
+wobble = 5;
 trial = 15;
 wave = 1;
 

@@ -1,4 +1,4 @@
-function makePolarPlot(allPhases,binWidth,plotAxis,color)
+function makePolarPlot(allPhases,binWidth,plotAxis,colorVals)
 % plot polar histogram and the mean direction
 % Inputs - phaseValues: Give phase values as a cell. Multiple phase vectors
 % may be given in a cell, in which case they will be plotted in different
@@ -17,7 +17,7 @@ end
 
 
 for phasei = 1:numel(allPhases)
-    phaseValues = cell2mat(allPhases{phasei});
+    phaseValues = cell2mat(allPhases(phasei));
     color = colorVals(phasei,:);
     phaseValues = reshape(phaseValues,[1,numel(phaseValues)]);
     phaseValues(isnan(phaseValues)) = [];

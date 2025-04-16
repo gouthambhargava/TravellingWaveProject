@@ -1,148 +1,109 @@
-function [allDir,allUniqueDirs,newBounds,speed,tempFreq,clusters,pgd,emptyCells] = getWaveSegments(outputsTW,timeVals,wobbleReq)
-% set boundryLims as a vector of times outside of which direction vectors
-% will not be considered
-% if timeFlag = 1, append time values, else append the indices instead
-boundryLims = [0.25 0.75];
-boundryLims = [dsearchn(timeVals',boundryLims(1)),dsearchn(timeVals',boundryLims(2))];
-%% find the travelling wave indices for all trials and plot
-pgd = zeros(numel(outputsTW),length(timeVals));
-directions = zeros(numel(outputsTW),length(timeVals));
-tempFreq = zeros(numel(outputsTW),length(timeVals)-1);
-clusters = zeros(numel(outputsTW),length(timeVals));
-speed = zeros(numel(outputsTW),length(timeVals));
+function [waveVector,uniqueDirs,waveBounds] = getWaveSegments(outputsTW,timeVals,wobbleLim,segOption,boundryLims, lengthLimit)
+% set boundryLims as a vector of times outside of which direction vectors will not be considered
+% Inputs: -outputsTW - output from getTWCircParams which contains the PGD, direction, speed, tempFreq and clusters for a single trial
+%         -timeVals - vector of time values for the given trial
+%         -wobbleLim - sets a threshold of an angle(in deg). Consecutive
+%         values in direction under this threshold are considered part of a
+%         single wave. Leave this option empty if segmentation according to
+%         direction values is not required
+%         -segOption - 
+%         -boundryLims - give time limits, ex [0.25 0.75]. Waves will be identified only within this limit  
+%         -lengthLimit - set a length value (in ms). Only waves above this
+%         limit be considered. 
 
-for i = 1:numel(outputsTW)
-    pgd(i,:) = outputsTW{i}.pgd;
-    directions(i,:) = outputsTW{i}.direction;
-    speed(i,:) = outputsTW{i}.speed;
-    tempFreq(i,:) = outputsTW{i}.tempFreq;
-    clusters(i,:) = outputsTW{i}.clusters;
-end
-tempFreq = cat(2,zeros(size(tempFreq,1),1),tempFreq);
-
-pgd(pgd<0) = 0;
-pgd(isnan(pgd)) = 0;
-directions(pgd==0) = nan;
-directions(:,1:boundryLims(1)-1) = nan;
-directions(:,boundryLims(2)+1:length(timeVals)) = nan;
-
-allDir = nan(size(directions,1),length(timeVals));
-newBounds = cell(1,size(directions,1));
-allUniqueDirs = cell(1,size(directions,1));
-
+% define some parameters
+boundryLims = dsearchn(timeVals',boundryLims(1)):dsearchn(timeVals',boundryLims(2)); %indices of the specified time limit
+Fs = 1/(timeVals(2)-timeVals(1));
+lengthLimit = lengthLimit*Fs*10^-3;
+direction = outputsTW.direction;
+direction(setdiff(1:length(timeVals),boundryLims)) = nan;
 %% diverge into type of segmentation required
-if wobbleReq==1
-    for i = 1:size(directions,1)
-        boundries = [];
-        directionInt = zeros(1,length(timeVals));
-        directionInt(~isnan(directions(i,:))) = 1;
-        directionData = find(directionInt==0);
-        directionEpochs = find(diff(directionData)>1);
-        boundries = cat(2,boundries,[directionData(directionEpochs)+1;directionData(directionEpochs+1)-1]); 
-        boundries(:,diff(boundries)<5) = [];
-        for k = 1:size(boundries,2)
-            allDir(i,boundries(1,k):boundries(2,k)) = directions(i,boundries(1,k):boundries(2,k));
-            allUniqueDirs{i,k} = circ_mean(unique(directions(i,boundries(1,k):boundries(2,k)))');
-        end
-        newBounds{i} = boundries;
-    end
-    emptyCells = [];
-    speed(isnan(allDir)) = nan;
-    tempFreq(isnan(allDir)) = nan;
-    clusters(isnan(allDir)) = nan;
-    pgd(isnan(allDir)) = nan;
 
-elseif wobbleReq==2
-    wobbleLim = 10;
-    for i = 1:size(directions,1)
-    boundries = [];
-    directionInt = zeros(1,length(timeVals));
-    directionInt(~isnan(directions(i,:))) = 1;
-    directionData = find(directionInt==0);
-    directionEpochs = find(diff(directionData)>1);
-    boundries = cat(2,boundries,[directionData(directionEpochs)+1;directionData(directionEpochs+1)-1]); 
-    boundries(:,diff(boundries)<40) = [];
-    revisedBounds = [];
-        for k = 1:size(boundries,2)
-            tempBounds = directions(i,boundries(1,k):boundries(2,k));
-            tempBoundsInd = boundries(1,k):boundries(2,k);
-            tempDiff = abs(diff(tempBounds));
-            if max(tempDiff)<deg2rad(wobbleLim)
-                revisedBounds = cat(2,revisedBounds,[boundries(1,k);boundries(2,k)]);
-            else
+if segOption==1 % get wave segments where segments are purely seperated by significant PGD. Segmentation is very lenient 
+    [waveVector,waveBounds] = simpleWaveSegments(direction,lengthLimit);
+    uniqueDirs = [];
+    for j = 1:size(waveBounds,2)
+        uniqueDirs = cat(2,uniqueDirs,circ_mean(direction(waveBounds(1,j):waveBounds(2,j))'));
+    end
+
+elseif segOption==2 % Imposes an additional criteria on wave segmentation, based on wobbleLim.
+    % waves within this earlier segmentation are further degraded based on
+    % the angular difference between successive time points. Each time
+    % point can vary only within the wobbleLim. Variation beyond this limit
+    % marks the start of a new wave.
+    
+
+    [newDirection,boundries] = simpleWaveSegments(direction,lengthLimit);
+
+    for k = 1:size(boundries,2)
+        tempBounds = newDirection(boundries(1,k):boundries(2,k));
+        tempBoundsInd = boundries(1,k):boundries(2,k);
+        tempDiff = abs(diff(tempBounds));
+        revisedBounds = [];
+        if max(tempDiff)<deg2rad(wobbleLim)
+            revisedBounds = cat(2,revisedBounds,[boundries(1,k);boundries(2,k)]);
+        else
             stpPts = find(tempDiff>deg2rad(wobbleLim))+1;
             stpPts = [1 stpPts;stpPts-1 numel(tempBounds)];
             revisedBounds = cat(2,revisedBounds,[tempBoundsInd(stpPts(1,:));tempBoundsInd(stpPts(2,:))]);
-            end
-            revisedBounds(:,diff(revisedBounds)<40) = [];
-        end 
+        end
+        revisedBounds(:,diff(revisedBounds)<lengthLimit) = [];
+    end
+    waveVector = nan(1,length(direction));
+    uniqueDirs = [];
+    for j = 1:size(revisedBounds,2)
+        waveVector(revisedBounds(1,j):revisedBounds(2,j)) = direction(revisedBounds(1,j):revisedBounds(2,j));
+        uniqueDirs = cat(2,uniqueDirs,circ_mean(direction(revisedBounds(1,j):revisedBounds(2,j))'));
+    end
+    waveBounds = revisedBounds;
+    
+else % ensures that wave segments from option 1 are further fragmented so that the total amount of variation between
+    % the start and end of a wave is within the wobbleLim
+    [~,boundries] = simpleWaveSegments(direction,lengthLimit);
+    revisedBounds = [];
+    for k = 1:size(boundries,2)
+        tempBounds = direction(boundries(1,k):boundries(2,k));
+        boundaryIndices = boundries(1,k):boundries(2,k);
+        waveIndices = getSegmentedWaves(tempBounds,boundaryIndices,wobbleLim);
+        revisedBounds = cat(2,revisedBounds,waveIndices);
+    end
+    revisedBounds(:,diff(revisedBounds)<lengthLimit) = [];
+    
+    waveVector = nan(1,length(direction));
+    if ~isempty(revisedBounds)
         uniqueDirs = [];
         for j = 1:size(revisedBounds,2)
-            allDir(i,revisedBounds(1,j):revisedBounds(2,j)) = directions(i,revisedBounds(1,j):revisedBounds(2,j));
-            uniqueDirs = cat(2,uniqueDirs,circ_mean(directions(i,revisedBounds(1,j):revisedBounds(2,j))'));
+            waveVector(revisedBounds(1,j):revisedBounds(2,j)) = direction(revisedBounds(1,j):revisedBounds(2,j));
+            uniqueDirs = cat(2,uniqueDirs,circ_mean(direction(revisedBounds(1,j):revisedBounds(2,j))'));
         end
-        newBounds{i} = revisedBounds;
-        allUniqueDirs{i} = uniqueDirs;
+        waveBounds = revisedBounds;
     end
-speed(isnan(allDir)) = nan;
-tempFreq(isnan(allDir)) = nan;
-clusters(isnan(allDir)) = nan;
-pgd(isnan(allDir)) = nan;
-
-emptyCells = find(cellfun(@isempty,newBounds));
-newBounds(emptyCells) = [];
-speed(emptyCells,:) = [];
-tempFreq(emptyCells,:) = [];
-clusters(emptyCells,:) = [];
-pgd(emptyCells,:) = [];
-
-else
-    wobbleLim = 5;
-    for i = 1:size(directions,1)
-        boundries = getLims(directions(i,:),1);
-        boundries(:,diff(boundries)<50) = [];
-        revisedBounds = [];
-        for k = 1:size(boundries,2)
-            tempBounds = directions(i,boundries(1,k):boundries(2,k));
-            boundaryIndices = boundries(1,k):boundries(2,k);
-            waveIndices = getSegmentedWaves(tempBounds,boundaryIndices,wobbleLim);
-            revisedBounds = cat(2,revisedBounds,waveIndices);
-        end 
-        revisedBounds(:,diff(revisedBounds)<50) = [];
-
-        if ~isempty(revisedBounds)
-        uniqueDirs = [];
-            for j = 1:size(revisedBounds,2)
-                allDir(i,revisedBounds(1,j):revisedBounds(2,j)) = directions(i,revisedBounds(1,j):revisedBounds(2,j));
-                uniqueDirs = cat(2,uniqueDirs,circ_mean(directions(i,revisedBounds(1,j):revisedBounds(2,j))'));
-            end
-        newBounds{i} = revisedBounds;
-        allUniqueDirs{i} = uniqueDirs;
-        end
-    end
-
-    speed(isnan(allDir)) = nan;
-    tempFreq(isnan(allDir)) = nan;
-    clusters(isnan(allDir)) = nan;
-    pgd(isnan(allDir)) = nan;
-    emptyCells = find(cellfun(@isempty,newBounds));
-    newBounds(emptyCells) = [];
-    speed(emptyCells,:) = [];
-    tempFreq(emptyCells,:) = [];
-    clusters(emptyCells,:) = [];
-    pgd(emptyCells,:) = [];
 end
 end
 
 %% additional functions
-%%
+function [waveVector,boundries] = simpleWaveSegments(dataOrig,lengthLimit)
+    waveVector = nan(1,length(dataOrig));
+    data = dataOrig;
+    data(isnan(data)) = 0;
+    data(data~=0) = 1;
+    data = find(data==0);
+    dataEpochs = find(diff(data)>1);
+    boundries = [data(dataEpochs)+1,data(dataEpochs+1)-1]';
+    boundries(:,diff(boundries)<lengthLimit) = []; 
+    for k = 1:size(boundries,2)
+        waveVector(boundries(1,k):boundries(2,k)) = dataOrig(boundries(1,k):boundries(2,k));
+    end
+end
+
 function [waveIndices] = getSegmentedWaves(data,boundaryIndices,devAngle)
+data = reshape(data,[1,length(data)]);
 dataFull = [nan data nan];
 uniqueAngles = unique(dataFull);
 uniqueAngles(isnan(uniqueAngles)) = [];
 
 segWaveBounds = [];
-inMat = zeros(length(segWaveBounds),length(segWaveBounds));
+inMat = [];
 for i = 1:numel(uniqueAngles)
     data = dataFull;
     initAngle = uniqueAngles(i);
@@ -194,24 +155,5 @@ end
 waveIndices = zeros(2,size(nonOverlappingWaves,2));
 for i = 1:size(nonOverlappingWaves,2)
     waveIndices(:,i) = [boundaryIndices(nonOverlappingWaves(1,i));boundaryIndices(nonOverlappingWaves(2,i))];
-end
-end
-
-function [boundries] = getLims(data,flag)
-if flag==1
-    % for segmenting when required segments are sparse (intervening zeros)
-    boundries = [];
-    dataInt = zeros(1,length(data));
-    dataInt(~isnan(data)) = 1;
-    dataSig = find(dataInt==0);
-    dataEpochs = find(diff(dataSig)>1);
-    boundries = cat(2,boundries,[dataSig(dataEpochs)+1;dataSig(dataEpochs+1)-1]); 
-else
-    % for segmenting continuous segments 
-    % dataDiff = diff(data);
-    dataDiff = [1,abs(diff(data)),1];
-    dataDiff(dataDiff~=0) = 1;
-    boundries = find(dataDiff);
-    boundries = [boundries(1:end-1);boundries(2:end)-1];
 end
 end
