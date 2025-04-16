@@ -26,9 +26,11 @@ sFreq = zeros(timePoints,1);
 coh = zeros(timePoints,1);
 
 burstMat(isnan(burstMat)) = 0;
-burstVec = sum(burstMat);
-burstVec(burstVec>0) = 1;
-burstVec(burstVec==0) = nan;
+burstVec = nansum(burstMat)/numGoodElectrodes;
+burstVec(burstVec>electrodeFraction) = 1;
+burstVec(burstVec~=1) = nan;
+% burstVec(burstVec>0) = 1;
+% burstVec(burstVec==0) = nan;
 
 if ~isempty(nPerm)
     pgdPerm = zeros(timePoints,nPerm);

@@ -262,7 +262,7 @@ burstMatrix = cell(1,numFrequencyRanges);
             hold(hSignal(1,i),'on');
 
             % Show time points where the grid as a whole has bursts
-            plot(hSignal(1,i),timeVals(nanmean(burstMatrix{i})>elecFrac),numel(goodElectrodes)+1,'k*');
+            plot(hSignal(1,i),timeVals(outputsTW{i}.burstVec==1),numel(goodElectrodes)+1,'|','Color','black');
             xlim(hSignal(1,i),axisRange1List{2});
 
             % plot different wave segments with the bursts - colored individually
@@ -389,7 +389,7 @@ burstMatrix = cell(1,numFrequencyRanges);
         claGivenPlotHandle(hTF(2:end,:)); cla(hTF(1,2));
         claGivenPlotHandle(hSignal);
         claGivenPlotHandle(hStats);
-        claGivenPlotHandle(hGridPlots2)
+        claGivenPlotHandle(hGridPlots2([3,6]))
     end
     function rescale_Callback(~,~)
         freqLims = [str2double(get(hAxisRange1Min{1},'String')) str2double(get(hAxisRange1Max{1},'String'))];
@@ -404,6 +404,11 @@ burstMatrix = cell(1,numFrequencyRanges);
             yLims = [str2double(get(hAxisRange2Min{i},'String')) str2double(get(hAxisRange2Max{i},'String'))];
             rescaleGivenPlotHandle(hSignal(2:end,i),[timeLims yLims]);
         end
+        for i=1:numFrequencyRanges
+            rescalePlotHandleX(hStats(:,i),timeLims);
+            rescalePlotHandleX(hSignal(1,i),timeLims);
+            
+        end
     end
     function rescaleZGivenPlotHandle(plotHandles,cLims)
         [numRows,numCols] = size(plotHandles);
@@ -414,7 +419,7 @@ burstMatrix = cell(1,numFrequencyRanges);
         end
     end
     function cla_Callback2(~,~)
-        claGivenPlotHandle(hGridPlots2(1:4));
+        claGivenPlotHandle(hGridPlots2([1,2,4,5]));
     end
 end
 
@@ -427,6 +432,16 @@ for i=1:numRows
     end
 end
 end
+
+function rescalePlotHandleX(plotHandles,axisLims)
+[numRows,numCols] = size(plotHandles);
+for i=1:numRows
+    for j=1:numCols
+        xlim(plotHandles(i,j),axisLims);
+    end
+end
+end
+
 
 function claGivenPlotHandle(plotHandles)
 [numRows,numCols] = size(plotHandles);

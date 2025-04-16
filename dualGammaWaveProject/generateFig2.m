@@ -333,6 +333,4 @@ annotation('textbox',[0.64, 0.757, 0.1, 0.1],'String','Fast Gamma','FontSize',20
 annotation('textbox',[0.64, 0.727, 0.1, 0.1],'String','Slow Gamma Overlap','FontSize',20,'EdgeColor','none')
 annotation('textbox',[0.64, 0.697, 0.1, 0.1],'String','Fast Gamma Overlap','FontSize',20,'EdgeColor','none')
 
-
-
 annotation('textbox',[0.05,0.95, 0, 0], 'string', 'A','FontSize',30,'FontWeight','bold')
