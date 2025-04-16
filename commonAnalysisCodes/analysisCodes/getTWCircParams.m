@@ -13,7 +13,8 @@ function outputs = getTWCircParams(phiMat,burstMat,timeVals,goodElectrodes,locLi
 if ~exist('nPerm','var'); nPerm = [];  end
 
 % Parameters
-elecDist = 400*10^-6; %distance between adjacent electrodes in the array in m
+elecDist = 400*10^-6; %distance between adjacent electrodes in the array in m. Currently set to MEA by default. Option to select 
+                      %between EEG and MEA to be added in the future.
 fs = round(1/(timeVals(2)-timeVals(1))); %sampling frequency
 timePoints = length(timeVals);
 numGoodElectrodes = length(goodElectrodes);

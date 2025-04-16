@@ -9,9 +9,6 @@ if nargin<5
     overlap = 0.5;
 end
 
-% sgBounds = boundriesTimesSg;
-% fgBounds = boundriesTimesFg;
-% sgCounts = zeros(1,size(sgBounds,2));
 fgCounts = zeros(1,size(fgBounds,2));
 
 overlapTW = [];

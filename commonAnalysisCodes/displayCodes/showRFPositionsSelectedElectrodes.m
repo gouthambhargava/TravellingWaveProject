@@ -1,4 +1,8 @@
 function electrodeArray = showRFPositionsSelectedElectrodes(hRFPlots,goodElectrodes,selectedElectrodes,rfData,parameters,colorNames)
+% plots the RF positions and electrode location map and highlights the
+% 'selectedElectrodes' in both plots. 
+% Inputs goodElectrodes, rfData and parameters are supplied from the function 'loadData'
+
 cla(hRFPlots(1)); cla(hRFPlots(2));
 showElectrodeRFs(hRFPlots(1),goodElectrodes,'k',rfData,parameters);
 

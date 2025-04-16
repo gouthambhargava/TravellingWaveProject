@@ -1,4 +1,6 @@
 function plotTFMT(hTF,data,timeVals,axisRanges,freqRangeHz,colorNames,type,trialNo,stimulusPeriodS)
+% function plots the time frequency maps with multitaper method (chronux
+% toolbox)
 % supply data in the form channels x trials x times
 % set trialNo to [] if all channels are needed
 

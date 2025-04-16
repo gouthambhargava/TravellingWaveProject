@@ -1,6 +1,9 @@
+%load MEa data of subjects used for this study. 
 % sPos: position of sf or size parameter. Takes values between 1-6: [0.5 1 2 4 8 all]
 % oriPos: position of orientation parameter. Takes values between 1-9: [0 22.5 45 67.5 90 112.5 135 157.5 all] 
 % param: 'sf' or 'size' to specify whether this corresponds to an SFOri or a sizeOri protocol
+% other inputs ('subjectName','expData','protocolName', 'gridType') are
+% specified in script - runDisplayTWData
 
 function [allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos,param)
 

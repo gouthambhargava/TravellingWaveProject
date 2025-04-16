@@ -27,7 +27,7 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % define them as a range of values. Ex.
 % angleRange=[0:5:360];
 % for calculating sfRange, specify the interelectrode distance in mm. Is
-% set to 0.4mm by default (MEA interelectrode distance)
+% set to 0.4mm by default (MEA interelectrode distance). Details in Das, A., Zabeh, E., Jacobs, J. (2023). How to Detect and Analyze Traveling Waves in Human Intracranial EEG Oscillations?. In: Axmacher, N. (eds) Intracranial EEG. Studies in Neuroscience, Psychology and Behavioral Economics. Springer, Cham. https://doi.org/10.1007/978-3-031-20910-9_30
 if nargin<3
     angleRange = 0:5:360;
 end

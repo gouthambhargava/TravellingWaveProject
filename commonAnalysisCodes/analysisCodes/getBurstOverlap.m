@@ -1,4 +1,7 @@
 function [slowGammaOverlap,fastGammaOverlap,burstTS] = getBurstOverlap(outputsTW,sPos,oriPos,thresh,minBurstSize,binEdges,req)
+% function only for generating figure 5. Identifies overlapping gamma
+% bursts and subsequently the variation of wave locations within these
+% overlapping bursts
 %% load data
 dataPath = 'F:\monkeyData\data';
 gridType = 'Microelectrode';
