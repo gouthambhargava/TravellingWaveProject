@@ -70,8 +70,9 @@ else % ensures that wave segments from option 1 are further fragmented so that t
     revisedBounds(:,diff(revisedBounds)<lengthLimit) = [];
     
     waveVector = nan(1,length(direction));
-    if ~isempty(revisedBounds)
-        uniqueDirs = [];
+    uniqueDirs = [];
+    waveBounds = [];
+    if ~isempty(revisedBounds)     
         for j = 1:size(revisedBounds,2)
             waveVector(revisedBounds(1,j):revisedBounds(2,j)) = direction(revisedBounds(1,j):revisedBounds(2,j));
             uniqueDirs = cat(2,uniqueDirs,circ_mean(direction(revisedBounds(1,j):revisedBounds(2,j))'));
