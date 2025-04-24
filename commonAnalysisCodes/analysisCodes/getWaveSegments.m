@@ -15,10 +15,21 @@ function [waveVector,uniqueDirs,waveBounds] = getWaveSegments(outputsTW,timeVals
 boundryLims = dsearchn(timeVals',boundryLims(1)):dsearchn(timeVals',boundryLims(2)); %indices of the specified time limit
 Fs = 1/(timeVals(2)-timeVals(1));
 lengthLimit = lengthLimit*Fs*10^-3;
-direction = outputsTW.direction;
-direction(setdiff(1:length(timeVals),boundryLims)) = nan;
-%% diverge into type of segmentation required
 
+if segOption == 4 % wave strength detection requires both pgd and direction 
+    pgd = outputsTW.pgd;
+    direction = outputsTW.direction;
+    if size(pgd,1)==1 % if this method is to be applied to TW estimations from global estimations of PGD, PGD and direction are repeated over all electrodes.
+        pgd = repmat(pgd,outputsTW.elecNum,1);
+        direction = repmat(direction,outputsTW.elecNum,1);
+    end
+    direction(:,setdiff(1:length(timeVals),boundryLims)) = nan;
+    pgd(:,setdiff(1:length(timeVals),boundryLims)) = nan;
+else 
+    direction = mean(outputsTW.direction);
+    direction(setdiff(1:length(timeVals),boundryLims)) = nan;
+end
+%% diverge into type of segmentation required
 if segOption==1 % get wave segments where segments are purely seperated by significant PGD. Segmentation is very lenient 
     [waveVector,waveBounds] = simpleWaveSegments(direction,lengthLimit);
     uniqueDirs = [];
@@ -31,8 +42,6 @@ elseif segOption==2 % Imposes an additional criteria on wave segmentation, based
     % the angular difference between successive time points. Each time
     % point can vary only within the wobbleLim. Variation beyond this limit
     % marks the start of a new wave.
-    
-
     [newDirection,boundries] = simpleWaveSegments(direction,lengthLimit);
 
     for k = 1:size(boundries,2)
@@ -57,7 +66,7 @@ elseif segOption==2 % Imposes an additional criteria on wave segmentation, based
     end
     waveBounds = revisedBounds;
     
-else % ensures that wave segments from option 1 are further fragmented so that the total amount of variation between
+elseif segOption==3 % ensures that wave segments from option 1 are further fragmented so that the total amount of variation between
     % the start and end of a wave is within the wobbleLim
     [~,boundries] = simpleWaveSegments(direction,lengthLimit);
     revisedBounds = [];
@@ -79,11 +88,28 @@ else % ensures that wave segments from option 1 are further fragmented so that t
         end
         waveBounds = revisedBounds;
     end
+else % the pgd and directions are used to calculate wave strength. Based on Das, A., Zabeh, E., Jacobs, J. (2023). How to Detect and Analyze Traveling Waves in Human Intracranial EEG Oscillations?. In: Axmacher, N. (eds) Intracranial EEG. Studies in Neuroscience, Psychology and Behavioral Economics. Springer, Cham. https://doi.org/10.1007/978-3-031-20910-9_30
+    
+    numElecs = numel(find(nansum(pgd,2))); %#ok<NANSUM>
+    stability = zeros(1,length(pgd));
+    uniqueDirs = [];
+    for i = 1:size(pgd,1)
+        for j = 1:size(pgd,2)-1
+            waveStab = abs(pgd(i,j+1)*exp(sqrt(-1)*direction(i,j+1)) - pgd(i,j)*exp(sqrt(-1)*direction(i,j)));
+            stability(j) = -sum(waveStab)/numElecs;
+        end
+    end
+    stability = zscoreNan(stability);
+    stability(stability<0) = 0;
+    [waveVector,waveBounds] = simpleWaveSegments(stability,lengthLimit);
 end
 end
-
 %% additional functions
 function [waveVector,boundries] = simpleWaveSegments(dataOrig,lengthLimit)
+    if nargin<2
+        lengthLimit = 0;
+    end
+    dataOrig = reshape(dataOrig,[length(dataOrig),1]);%convert to column vector 
     waveVector = nan(1,length(dataOrig));
     data = dataOrig;
     data(isnan(data)) = 0;
@@ -113,7 +139,7 @@ for i = 1:numel(uniqueAngles)
     data(dataDiff>deviation) = 0;
     data(data==0) = nan;
 
-    boundsInt = getLims(data,1);
+    [~,boundsInt] = simpleWaveSegments(data);
     segWaveBounds = cat(2,segWaveBounds,boundsInt);
 end
 
@@ -157,4 +183,10 @@ waveIndices = zeros(2,size(nonOverlappingWaves,2));
 for i = 1:size(nonOverlappingWaves,2)
     waveIndices(:,i) = [boundaryIndices(nonOverlappingWaves(1,i));boundaryIndices(nonOverlappingWaves(2,i))];
 end
+end
+
+function [nanScored] = zscoreNan(data) % zscoring when data has nans
+    meanData = mean(data(~isnan(data)));
+    stdData = std(data(~isnan(data)));
+    nanScored = (data-meanData)/stdData;
 end
