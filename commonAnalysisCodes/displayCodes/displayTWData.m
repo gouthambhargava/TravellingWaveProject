@@ -15,46 +15,58 @@
 % analyses are therefore done upfront even though results are shown only
 % for some electrodes and trials.
 
-function displayTWData(subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,stimPeriod,lengthLimit)
+function displayTWData(gridType,subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,stimPeriod,lengthLimit)
 
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;
 backgroundColor = 'w'; panelHeight = 0.125;
-gridType = 'Microelectrode';
+
 
 numFrequencyRanges = length(freqRangeList);
 colorNamesFreqRanges = gray(numFrequencyRanges+1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-disp('Getting data...');
-[allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
+
+if strcmpi(gridType,'Microelectrode')
+    disp('Getting data...');
+    [allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
+% else
+%     % load EEG data
+end
 numGoodElectrodes = length(goodElectrodes);
 
 %%%%%%%%%%%%%%%%%%%%%%% Do burst estimation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-thresholdFactor = 3;
-stimulusDurationS = [0 0.8]; % Stimulus duration to be highlighted
-baselinePeriodS = [-0.5 0];
-stimulusPeriodS = [0.25 0.75];
-analysisPeriodS = [-0.5 1];
-filterOrder = 4;
+% change - burst estimation has been moved to a different script to
+% accomodate other methods of bursts detection as well. Bursts will be
+% detected for single trials only, so they have been moved to
+% plot_callback1
 
-disp('Performing burst analysis...');
-burstTS = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
-filteredSignal = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
-if strcmp(analysisMethod,'hilbert')
-    for iFreq=1:numFrequencyRanges
-        for iElec=1:numGoodElectrodes
-            [~,~,~,burstTS(iElec,:,:,iFreq),filteredSignal(iElec,:,:,iFreq)] = getHilbertBurst(squeeze(allData(iElec,:,:)),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeList{iFreq},filterOrder,1,analysisPeriodS);
-        end
-    end
-else
-    %reserved for adding other methods (such as frequency sliding or PSD
-    %based freq selection) which might be more useful for EEG.
-end
+% thresholdFactor = 3;
+% 
+
+% filterOrder = 4;
+% 
+% disp('Performing burst analysis...');
+% burstTS = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
+% filteredSignal = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
+% if strcmp(analysisMethod,'hilbert')
+%     for iFreq=1:numFrequencyRanges
+%         for iElec=1:numGoodElectrodes
+%             [~,~,~,burstTS(iElec,:,:,iFreq),filteredSignal(iElec,:,:,iFreq)] = getHilbertBurst(squeeze(allData(iElec,:,:)),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeList{iFreq},filterOrder,1,analysisPeriodS);
+%         end
+%     end
+% else
+%     %reserved for adding other methods (such as frequency sliding or PSD
+%     %based freq selection) which might be more useful for EEG.
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Plot RF information %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hGridPlots = getPlotHandles(1,2,[0.025 0.65 0.3 0.2],0.01,0.02,0);
 numSelectedElectrodes = length(selectedElectrodes);
 colorNamesElectrodes = jet(numSelectedElectrodes);
+stimulusDurationS = [0 0.8]; % Stimulus duration to be highlighted
+% baselinePeriodS = [-0.5 0];
+stimulusPeriodS = [0.25 0.75];
+analysisPeriodS = [-0.5 1];
 electrodeArray = showRFPositionsSelectedElectrodes(hGridPlots,goodElectrodes,selectedElectrodes,rfData,parameters,colorNamesElectrodes);
 
 % get location for each electrode for segmentation into clusters
@@ -192,7 +204,19 @@ burstMatrix = cell(1,numFrequencyRanges);
         trialNum = trialNumList((get(hTrial,'val')));
         wobbleLim = str2double(get(hWobbleReq,'String'));
         segOption = get(hSegReq,'val');
-        waveMethod = get(hWaveMethod,'String'); % to be implemented in future versions
+        waveMethod = get(hWaveMethod,'val'); % to be implemented in future versions
+        freqReq = 2;
+        lengthLimit = 25;
+
+        disp('Performing burst analysis...');
+        burstMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
+        filteredSignal = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
+        phaseMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
+        burstMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
+
+        for i=1:numFrequencyRanges
+            [burstMatrix(:,:,i),filteredSignal(:,:,i),phaseMatrix(:,:,i)] = getFilteredBurstsTW(squeeze(allData(:,trialNum,:)),freqRangeList{i},analysisPeriodS,freqReq,timeVals);
+        end
 
 
         %get burst fraction statistics
@@ -203,11 +227,11 @@ burstMatrix = cell(1,numFrequencyRanges);
         disp('Getting TW parameters');
 
         for i = 1:numFrequencyRanges
-            phaseMatrix{i} = angle(hilbert(squeeze(filteredSignal(:,trialNum,:,i))'))';
-            burstMatrix{i} = squeeze(burstTS(:,trialNum,:,i));
-            outputsTW{i} = getTWCircParams(phaseMatrix{i},burstMatrix{i},timeVals,goodElectrodes,locList,elecFrac,elecChoice);
-            [waveVector{i},uniqueDirs{i},waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,segOption,stimPeriod,lengthLimit);
-            % directions{i} = outputsTW{i}.direction;
+            % phaseMatrix{i} = angle(hilbert(squeeze(filteredSignal(:,trialNum,:,i))'))';
+            % burstMatrix{i} = squeeze(burstTS(:,trialNum,:,i));
+            
+            outputsTW{i} = getTWCircParams(phaseMatrix(:,:,i),burstMatrix(:,:,i),timeVals,goodElectrodes,locList,elecFrac,elecChoice,gridType,waveMethod);
+            [waveVector{i},uniqueDirs{i},waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,segOption,stimulusPeriodS,lengthLimit);
         end
         disp('TW analysis completed');
 
@@ -245,11 +269,11 @@ burstMatrix = cell(1,numFrequencyRanges);
 
             % Plot filtered signal and show bursts
             for j=1:numFrequencyRanges
-                plot(hSignal(i+1,j),timeVals,squeeze(filteredSignal(ePos,trialNum,:,j)),'color',colorNamesFreqRanges(j,:));
+                plot(hSignal(i+1,j),timeVals,squeeze(filteredSignal(ePos,:,j)),'color',colorNamesFreqRanges(j,:));
                 hold(hSignal(i+1,j),'on');
-                plot(hSignal(i+1,j),timeVals,squeeze(burstTS(ePos,trialNum,:,j))-1,'color','r','linewidth',2);
+                plot(hSignal(i+1,j),timeVals,squeeze(burstMatrix(ePos,:,j))-1,'color','r','linewidth',2);
                 axis(hSignal(i+1,j),[axisRange1List{2} axisRange2List{j}]);
-                plot(hTF(i+1,2),timeVals, mean(freqRangeList{j})+ squeeze(burstTS(ePos,trialNum,:,j))-1,'color',colorNamesFreqRanges(j,:),'linewidth',2);
+                plot(hTF(i+1,2),timeVals, mean(freqRangeList{j})+ burstMatrix(ePos,:,j)-1,'color',colorNamesFreqRanges(j,:),'linewidth',2);
             end
         end
 
@@ -257,8 +281,8 @@ burstMatrix = cell(1,numFrequencyRanges);
         for i = 1:numFrequencyRanges
             
             % Plot bursts
-            chanVals = repmat((1:numel(goodElectrodes))',1,size(burstTS,3))';
-            plot(timeVals,squeeze(burstTS(:,trialNum,:,i))'+chanVals-1,'parent',hSignal(1,i),'color','r','linewidth',1);
+            chanVals = repmat((1:numel(goodElectrodes))',1,size(burstMatrix,2));
+            plot(timeVals,burstMatrix(:,:,i)+chanVals-1,'parent',hSignal(1,i),'color','r','linewidth',1);
             hold(hSignal(1,i),'on');
 
             % Show time points where the grid as a whole has bursts
@@ -272,22 +296,19 @@ burstMatrix = cell(1,numFrequencyRanges);
             end
 
             % plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
-            plot(hStats(1,i),timeVals,outputsTW{i}.speed,'color',colorNamesFreqRanges(i,:));
+            plot(hStats(1,i),timeVals,mean(outputsTW{i}.speed),'color',colorNamesFreqRanges(i,:));
             axis(hStats(1,i),[axisRange1List{2},0 0.8]);
 
-            % tempFreq = [outputsTW{i}.tempFreq];
-            % tempFreq(tempFreq==0) = nan;
-            % wrappedAngles = wrapTo360(tempFreq);
-            plot(hStats(2,i),timeVals,outputsTW{i}.tempFreq,'color',colorNamesFreqRanges(i,:));
+            plot(hStats(2,i),timeVals,mean(outputsTW{i}.tempFreq),'color',colorNamesFreqRanges(i,:));
             % plot(hStats(2,i),timeVals,outputsTW{i}.Wavelength,'color',colorNamesFreqRanges(i,:));
 
             axis(hStats(2,i),[axisRange1List{2},0 100]);
 
             plot(hStats(3,i),timeVals,outputsTW{i}.coh,'color','r');
             hold(hStats(3,i),'on');
-            plot(hStats(3,i),timeVals,abs(mean(exp(1i*phaseMatrix{i}))),'color','m');
+            plot(hStats(3,i),timeVals,abs(mean(exp(1i*phaseMatrix(:,:,i)))),'color','m');
             plot(hStats(3,i),timeVals,outputsTW{i}.burstVec,'color','k');
-            plot(hStats(3,i),timeVals,outputsTW{i}.pgd,'color','g');
+            plot(hStats(3,i),timeVals,mean(outputsTW{i}.pgd),'color','g');
             hold(hStats(3,i),'on');
 %           yline(hStats(3,i),elecFrac,'color','b');
             line(axisRange1List{2},[elecFrac elecFrac],'parent',hStats(3,i),'color','b');
@@ -299,7 +320,7 @@ burstMatrix = cell(1,numFrequencyRanges);
             makePolarPlot(num2cell(uniqueDirs{i}),10,hGridPlots2(3,i),colorVals)
         end
     end
-
+%
     function plot_Callback2(~,~)
         
            % get inputs
@@ -350,7 +371,7 @@ burstMatrix = cell(1,numFrequencyRanges);
                     end
 
                     % plot absolute phases
-                    tmpPhases = phaseMatrix{j}(:,timeRangeProp(ind));
+                    tmpPhases = phaseMatrix(:,timeRangeProp(ind),j);
                     if refPhaseChoice==1
                         refPhase = circ_mean(tmpPhases);
                     else
