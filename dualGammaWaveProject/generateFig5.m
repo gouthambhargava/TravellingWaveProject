@@ -1,24 +1,87 @@
 %% generate fig 5
-req = 1;
-minBurstSize = 50;
-wobble = 10;
-sPos = 2;
-oriPos = 1:8;
+% load data for all ori combinations
+% get bursts calculation for all
+% generate outputs for both SG and FG for every ori combination
+% run getWaveAndBurst overlap
+% plot the results
+
+% set up some parameters
+minBurstSize = 100; % in ms
+wobble = 5; % in deg
 thresh = 0.5;
 binEdges = 0:0.05:1;
-outputsTW1 = {outputsTWA21,outputsTWA22,outputsTWA23,outputsTWA24,outputsTWA25,outputsTWA26,outputsTWA27,outputsTWA28};
-outputsTW2 = {outputsTWK21,outputsTWK22,outputsTWK23,outputsTWK24,outputsTWK25,outputsTWK26,outputsTWK27,outputsTWK28};
+electrodeFraction = 0.5;
+electrodeChoice = 'selected';
+arrayType = 'Microelectrode';
+waveDetectionMethod = 1;
 
-for i = 1:numel(oriPos)
-[sgBursts1{i},fgBursts1{i}] = getBurstOverlap(outputsTW1{i},sPos,i,thresh,minBurstSize,binEdges,req);
-end
-%
-req = 2;
-for i = 1:numel(oriPos)
-[sgBursts2{i},fgBursts2{i}] = getBurstOverlap(outputsTW2{i},sPos,i,thresh,minBurstSize,binEdges,req);
+freqRangeList{1} = [25 35]; freqRangeList{2} = [40 50];
+waveLengthLimit = 25;
+sPos = 2; % spatial frequency: 0.5 (1), 1(2), 2 (3), 4 (4), 8 (5), all SFs (6). Note that the same code can be used for the size project also later where stimulus size is changed instead of spatial frequency
+oriPos = 1:8; % orientation: 0 (1), 22.5 (2), 45 (3), 67.5 (4), 90 (5), 112.5 (6), 135 (7), 157.5 (8), all orientations (9)
+stimPeriod = [0.25 0.75];
+dataPath = 'G:\monkeyData\data';
+gridType = 'Microelectrode';
+%% load data
+%for monkey 1
+subjectName='alpaH'; expDate = '210817'; protocolName = 'GRF_002';
+
+slowGammaOverlap1 = cell(1,length(oriPos));
+fastGammaOverlap1 = cell(1,length(oriPos));
+burstTS1 = cell(1,length(oriPos));
+for i = 1:length(oriPos) % for all ori
+    [allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos(i));
+
+    %get electrode positions
+    locList = zeros(length(goodElectrodes),2);
+    gridLayout = rot90(reshape(1:81,[9,9]),2); %set the grid layout
+    for gridi = 1:numel(goodElectrodes)
+        [locList(gridi,1),locList(gridi,2)] = find(gridLayout==goodElectrodes(i));
+    end
+
+    burstMat = nan(size(allData));
+    outputs = cell(length(freqRangeList),size(allData,2));
+    for j = 1:size(allData,2) % for all trials
+        for k = 1:length(freqRangeList)
+            [burstMat(:,:,j),~,bandPhase] = getFilteredBurstsTW(squeeze(allData(:,j,:)),freqRangeList{k},[0.25 0.75],2,timeVals);
+            outputs{k,j} = getTWCircParams(bandPhase,burstMat(:,:,j),timeVals,goodElectrodes,locList,electrodeFraction,electrodeChoice,arrayType,waveDetectionMethod);
+        end
+    end
+    [slowGammaOverlap1{i},fastGammaOverlap1{i},burstTS1{i}] = getWaveAndBurstOverlap(burstTS,outputs,timeVals,burstLengthLimit,waveLengthLimit,waveWobble,binEdges);
 end
 
-%%
+
+
+%for monkey 2
+subjectName='kesariH'; expDate = '270218'; protocolName = 'GRF_001';
+
+slowGammaOverlap2 = cell(1,length(oriPos));
+fastGammaOverlap2 = cell(1,length(oriPos));
+burstTS2 = cell(1,length(oriPos));
+for i = 1:length(oriPos) % for all ori
+    [allData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos(i));
+
+    %get electrode positions
+    locList = zeros(length(goodElectrodes),2);
+    gridLayout = rot90(reshape(1:81,[9,9]),2); %set the grid layout
+    for gridi = 1:numel(goodElectrodes)
+        [locList(gridi,1),locList(gridi,2)] = find(gridLayout==goodElectrodes(i));
+    end
+
+    burstMat = nan(size(allData));
+    outputs = cell(length(freqRangeList),size(allData,2));
+    for j = 1:size(allData,2) % for all trials
+        for k = 1:length(freqRangeList)
+            [burstMat(:,:,j),~,bandPhase] = getFilteredBurstsTW(squeeze(allData(:,j,:)),freqRangeList{k},[0.25 0.75],2,timeVals);
+            outputs{k,j} = getTWCircParams(bandPhase,burstMat(:,:,j),timeVals,goodElectrodes,locList,electrodeFraction,electrodeChoice,arrayType,waveDetectionMethod);
+        end
+    end
+    [slowGammaOverlap2{i},fastGammaOverlap2{i},burstTS2{i}] = getWaveAndBurstOverlap(burstTS,outputs,timeVals,burstLengthLimit,waveLengthLimit,waveWobble,binEdges);
+end
+
+
+
+%% generate the plot
 colorVals = cat(1,[52 148 186]./255,[236 112 22]./255);
 subplot(4,4,[1,5,9])
 burstData = sgBursts1{4};
