@@ -295,28 +295,35 @@ burstMatrix = cell(1,numFrequencyRanges);
                 plot(hSignal(1,i),timeVals(waveBounds{i}(1,k):waveBounds{i}(2,k)),0,'|','Color',colorVals(k,:));
             end
 
-            % plot(hStats(1,i),timeVals,angle(exp(1i*outputsTW{i}.direction)),'color',colorNamesFreqRanges(i,:));
-            plot(hStats(1,i),timeVals,mean(outputsTW{i}.speed),'color',colorNamesFreqRanges(i,:));
-            axis(hStats(1,i),[axisRange1List{2},0 0.8]);
-
-            plot(hStats(2,i),timeVals,mean(outputsTW{i}.tempFreq),'color',colorNamesFreqRanges(i,:));
-            % plot(hStats(2,i),timeVals,outputsTW{i}.Wavelength,'color',colorNamesFreqRanges(i,:));
-
-            axis(hStats(2,i),[axisRange1List{2},0 100]);
+            % plot the rest of the TW parameters
+            pgdTemp = mean(outputsTW{i}.pgd);
+            pgdTemp(isnan(pgdTemp)) = 0;
+            plot(hStats(1,i),timeVals,pgdTemp,'color',colorNamesFreqRanges(i,:));
+            axis(hStats(1,i),[axisRange1List{2},0 1]);
+            xticks(hStats(1,i),0);
+            xticklabels(hStats(1,i),'');
+            legend(hStats(1,i),{'PGD'},'Location','best','AutoUpdate','off')
+            
+            speedTemp = outputsTW{i}.speed;
+            speedTemp(isnan(speedTemp)) = 0;
+            plot(hStats(2,i),timeVals,speedTemp,'color',colorNamesFreqRanges(i,:));
+            axis(hStats(2,i),[axisRange1List{2},0 1]);
+            xticks(hStats(2,i),0);
+            xticklabels(hStats(2,i),'');
+            legend(hStats(2,i),{'Speed'},'Location','best','AutoUpdate','off')
 
             plot(hStats(3,i),timeVals,outputsTW{i}.coh,'color','r');
             hold(hStats(3,i),'on');
-            plot(hStats(3,i),timeVals,abs(mean(exp(1i*phaseMatrix(:,:,i)))),'color','m');
+            % plot(hStats(3,i),timeVals,abs(mean(exp(1i*phaseMatrix(:,:,i)))),'color','m');
             plot(hStats(3,i),timeVals,outputsTW{i}.burstVec,'color','k');
-            plot(hStats(3,i),timeVals,mean(outputsTW{i}.pgd),'color','g');
-            hold(hStats(3,i),'on');
 %           yline(hStats(3,i),elecFrac,'color','b');
             line(axisRange1List{2},[elecFrac elecFrac],'parent',hStats(3,i),'color','b');
             axis(hStats(3,i),[axisRange1List{2} 0 1]);
+            legend(hStats(3,i),{'Coh','Bursts'},'Location','best','AutoUpdate','off')
 
             % Plot angle plots for calculated directions 
-            makePolarPlot({waveVector{i}(~isnan(waveVector{i}))},10,hGridPlots2(3,i),[0.7 0.7 0.7])
-            hold(hGridPlots2(3,i),'on')
+            % makePolarPlot({waveVector{i}(~isnan(waveVector{i}))},10,hGridPlots2(3,i),[0.7 0.7 0.7])
+            % hold(hGridPlots2(3,i),'on')
             makePolarPlot(num2cell(uniqueDirs{i}),10,hGridPlots2(3,i),colorVals)
         end
     end
@@ -383,21 +390,21 @@ burstMatrix = cell(1,numFrequencyRanges);
                         tmpMatrix2(locList(e,1),locList(e,2)) = angle(exp(1i*(tmpPhases(e) - refPhase)));
                     end
 
-                    imagesc(tmpMatrix1,'parent',hGridPlots2(1,j));
+                    imagesc(cos(tmpMatrix1),'parent',hGridPlots2(1,j));
                     colormap(hGridPlots2(1,j),'parula');
-                    caxis(hGridPlots2(1,j),[-pi pi]);
+                    caxis(hGridPlots2(1,j),[-1 1]);
+                    axis(hGridPlots2(1,j),'off')
                     colorbar(hGridPlots2(1,j),'northoutside');
+                    hold(hGridPlots2(1,j),'on')
+                    directionGrid = repmat(waveVector{j}(timeRangeProp(ind)),size(tmpMatrix1,1),size(tmpMatrix1,2));
+                    U = cos(directionGrid);
+                    V = sin(directionGrid);
+                    quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))                  
 
                     imagesc(tmpMatrix2,'parent',hGridPlots2(2,j));
                     colormap(hGridPlots2(2,j),'hsv');
                     caxis(hGridPlots2(2,j),[-pi pi]);
                     colorbar(hGridPlots2(2,j),'northoutside');
-                    hold(hGridPlots2(2,j),'on')
-                    directionGrid = repmat(waveVector{j}(timeRangeProp(ind)),size(tmpMatrix2,1),size(tmpMatrix2,2));
-                    U = real(exp(1i*directionGrid));
-                    V = imag(exp(1i*directionGrid));
-                    quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(2,j))
-%                   hold(hGridPlots(2,1),'off')
                 end
                 drawnow
             end
