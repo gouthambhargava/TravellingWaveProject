@@ -79,3 +79,10 @@ waveSegOptions - 'Simple Segmentation'/'Point-point wobble'/'Full segment wobble
                                         
 %% Plot Phase Propagation Panel %%
 Time Range - set time range over which phase propagation is to be visualized
+
+% For analysis performed in 'Simultaneously induced slow and fast gamma waves travel independently in primate primary visual cortex' (doi: https://doi.org/10.1101/2024.11.06.622198)
+select ElectrodeFraction - 0.5
+       Electrode choices - 'selected'
+       wave wobble - 5
+       waveSegoptions - (Full segment wobble)
+       wave detection - simplle circlin regression 
