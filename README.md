@@ -84,5 +84,5 @@ Time Range - set time range over which phase propagation is to be visualized
 select ElectrodeFraction - 0.5
        Electrode choices - 'selected'
        wave wobble - 5
-       waveSegoptions - (Full segment wobble)
-       wave detection - simplle circlin regression 
+       waveSegoptions - Full segment wobble
+       wave detection - simple circlin regression 
