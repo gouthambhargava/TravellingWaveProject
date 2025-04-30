@@ -57,9 +57,14 @@ for phasei = 1:numel(allPhases)
     circle(0,0,1,[0,0,0],plotAxis);
     circle(0,0,0.5,[0.811764705882353,0.811764705882353,0.811764705882353],plotAxis);
     axis(plotAxis,[-1,1,-1,1])
-end
-    axis(plotAxis,'square')
+    
+end 
     axis(plotAxis,'off')
+    text(plotAxis,1.01,0,['0',char(176)],'FontSize',20)
+    text(plotAxis,-1.2,0,['180',char(176)],'FontSize',20)
+    text(plotAxis,0,-1.05,['270',char(176)],'FontSize',20)
+    axis(plotAxis,'square')
+    
 
 end
 
