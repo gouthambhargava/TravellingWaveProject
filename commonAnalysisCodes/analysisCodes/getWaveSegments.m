@@ -6,10 +6,20 @@ function [waveVector,uniqueDirs,waveBounds] = getWaveSegments(outputsTW,timeVals
 %         values in direction under this threshold are considered part of a
 %         single wave. Leave this option empty if segmentation according to
 %         direction values is not required
-%         -segOption - 
+%         -segOption - 1 - waves are considered whererever significant PGD values (>0) are observed. Waves <25ms are ignored.
+%                      2 - Based on the 'wave wobble', successive time points with significant PGD(>0) are said to belong to the
+%                      same wave only the wave direction varies by less than the 'wave wobble'.
+%                      3 - A time segment is considered a wave if the variation between any two time points within
+%                       the wave is less than the 'wave wobble'.
+%                      4 - Determines the presence or absence of a wave at a given time point based on both the PGD and direction
+%                          Details specified in Das, A., Zabeh, E., Jacobs, J. (2023). How to Detect and Analyze Traveling Waves in Human Intracranial EEG Oscillations?. In: Axmacher, N. (eds) Intracranial EEG. Studies in Neuroscience, Psychology and Behavioral Economics. Springer, Cham. https://doi.org/10.1007/978-3-031-20910-9_30
 %         -boundryLims - give time limits, ex [0.25 0.75]. Waves will be identified only within this limit  
 %         -lengthLimit - set a length value (in ms). Only waves above this
-%         limit be considered. 
+%         limit be considered.
+% Outputs
+%          waveVector - vector of time indices which contain waves
+%          uniqueDirs - mean direction values for each wave segment
+%          waveBounds - start and end time indices for each wave in waveVector
 
 % define some parameters
 boundryLims = dsearchn(timeVals',boundryLims(1)):dsearchn(timeVals',boundryLims(2)); %indices of the specified time limit
