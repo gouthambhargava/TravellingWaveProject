@@ -17,7 +17,7 @@
 
 function displayTWData(gridType,subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,stimPeriod,lengthLimit)
 
-fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;
+fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;fontSizeTiny = 6;
 backgroundColor = 'w'; panelHeight = 0.125;
 
 
@@ -39,26 +39,6 @@ numGoodElectrodes = length(goodElectrodes);
 % accomodate other methods of bursts detection as well. Bursts will be
 % detected for single trials only, so they have been moved to
 % plot_callback1
-
-% thresholdFactor = 3;
-% 
-
-% filterOrder = 4;
-% 
-% disp('Performing burst analysis...');
-% burstTS = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
-% filteredSignal = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
-% if strcmp(analysisMethod,'hilbert')
-%     for iFreq=1:numFrequencyRanges
-%         for iElec=1:numGoodElectrodes
-%             [~,~,~,burstTS(iElec,:,:,iFreq),filteredSignal(iElec,:,:,iFreq)] = getHilbertBurst(squeeze(allData(iElec,:,:)),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeList{iFreq},filterOrder,1,analysisPeriodS);
-%         end
-%     end
-% else
-%     %reserved for adding other methods (such as frequency sliding or PSD
-%     %based freq selection) which might be more useful for EEG.
-% end
-
 %%%%%%%%%%%%%%%%%%%%%%%% Plot RF information %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hGridPlots = getPlotHandles(1,2,[0.025 0.65 0.3 0.2],0.01,0.02,0);
 numSelectedElectrodes = length(selectedElectrodes);
@@ -179,23 +159,24 @@ hTimeRangePropMax = uicontrol('Parent',hPanel5,'Unit','Normalized','BackgroundCo
 plotToggle = uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0 0 0.5 0.5],'Style','togglebutton','String','Plot/Pause','FontSize',fontSizeMedium,'Callback',{@plot_Callback2},'Value',0);
 uicontrol('Parent',hPanel5,'Unit','Normalized','Position',[0.5 0 0.5 0.5],'Style','pushbutton','String','Clear','FontSize',fontSizeMedium,'Callback',{@cla_Callback2});
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%% Plot handles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Plot handles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hTF = getPlotHandles(numSelectedElectrodes+1,2,[0.025 0.05 0.3 0.55],0.025,0.025);
-hSignal = getPlotHandles(numSelectedElectrodes+1,numFrequencyRanges,[0.35 0.05 0.425 0.55],0.025,0.025);
-hStats = getPlotHandles(3,numFrequencyRanges,[0.35 0.625 0.425 0.225],0.025,0.01);
+hStats = getPlotHandles(4,numFrequencyRanges,[0.35 0.52 0.425 0.33],0.025,0.01);
+hBursts = getPlotHandles(1,numFrequencyRanges,[0.35 0.33 0.425 0.17],0.025,0.01);
+hSignal = getPlotHandles(numSelectedElectrodes,numFrequencyRanges,[0.35 0.05 0.425 0.25],0.025,0.01);
 hGridPlots2 = getPlotHandles(3,numFrequencyRanges,[0.8 0.05 0.19 0.8]);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Callbacks %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%% Callbacks %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Needs to be plotted only once
 plotTFMT(hTF(1,1),allData,timeVals,axisRange1List0,freqRangeList,colorNamesFreqRanges,'raw',[],stimulusDurationS); % Time-frequency power spectrum for all trials
 
 phaseMatrix = cell(1,numFrequencyRanges);
 outputsTW = cell(1,numFrequencyRanges);
 state = 0; % state variable to display the phases
-% directions = cell(1,numFrequencyRanges);
 waveVector = cell(1,numFrequencyRanges);
 uniqueDirs = cell(1,numFrequencyRanges);
 waveBounds = cell(1,numFrequencyRanges);
-burstMatrix = cell(1,numFrequencyRanges);
+
 
     function plot_Callback(~,~)
 
@@ -209,7 +190,6 @@ burstMatrix = cell(1,numFrequencyRanges);
         lengthLimit = 25;
 
         disp('Performing burst analysis...');
-        burstMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
         filteredSignal = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
         phaseMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
         burstMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
@@ -227,9 +207,6 @@ burstMatrix = cell(1,numFrequencyRanges);
         disp('Getting TW parameters');
 
         for i = 1:numFrequencyRanges
-            % phaseMatrix{i} = angle(hilbert(squeeze(filteredSignal(:,trialNum,:,i))'))';
-            % burstMatrix{i} = squeeze(burstTS(:,trialNum,:,i));
-            
             outputsTW{i} = getTWCircParams(phaseMatrix(:,:,i),burstMatrix(:,:,i),timeVals,goodElectrodes,locList,elecFrac,elecChoice,gridType,waveMethod);
             [waveVector{i},uniqueDirs{i},waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,segOption,stimulusPeriodS,lengthLimit);
         end
@@ -269,10 +246,10 @@ burstMatrix = cell(1,numFrequencyRanges);
 
             % Plot filtered signal and show bursts
             for j=1:numFrequencyRanges
-                plot(hSignal(i+1,j),timeVals,squeeze(filteredSignal(ePos,:,j)),'color',colorNamesFreqRanges(j,:));
-                hold(hSignal(i+1,j),'on');
-                plot(hSignal(i+1,j),timeVals,squeeze(burstMatrix(ePos,:,j))-1,'color','r','linewidth',2);
-                axis(hSignal(i+1,j),[axisRange1List{2} axisRange2List{j}]);
+                plot(hSignal(i,j),timeVals,squeeze(filteredSignal(ePos,:,j)),'color',colorNamesFreqRanges(j,:));
+                hold(hSignal(i,j),'on');
+                plot(hSignal(i,j),timeVals,squeeze(burstMatrix(ePos,:,j))-1,'color','r','linewidth',2);
+                axis(hSignal(i,j),[axisRange1List{2} axisRange2List{j}]);
                 plot(hTF(i+1,2),timeVals, mean(freqRangeList{j})+ burstMatrix(ePos,:,j)-1,'color',colorNamesFreqRanges(j,:),'linewidth',2);
             end
         end
@@ -282,17 +259,17 @@ burstMatrix = cell(1,numFrequencyRanges);
             
             % Plot bursts
             chanVals = repmat((1:numel(goodElectrodes))',1,size(burstMatrix,2));
-            plot(timeVals,burstMatrix(:,:,i)+chanVals-1,'parent',hSignal(1,i),'color','r','linewidth',1);
-            hold(hSignal(1,i),'on');
+            plot(timeVals,burstMatrix(:,:,i)+chanVals-1,'parent',hBursts(1,i),'color','r','linewidth',1);
+            hold(hBursts(1,i),'on');
 
             % Show time points where the grid as a whole has bursts
-            plot(hSignal(1,i),timeVals(outputsTW{i}.burstVec==1),numel(goodElectrodes)+1,'|','Color','black');
-            xlim(hSignal(1,i),axisRange1List{2});
+            plot(hBursts(1,i),timeVals(outputsTW{i}.burstVec==1),numel(goodElectrodes)+1,'|','Color','black');
+            xlim(hBursts(1,i),axisRange1List{2});
 
             % plot different wave segments with the bursts - colored individually
             colorVals = parula(size(waveBounds{i},2));
             for k = 1:size(waveBounds{i},2)
-                plot(hSignal(1,i),timeVals(waveBounds{i}(1,k):waveBounds{i}(2,k)),0,'|','Color',colorVals(k,:));
+                plot(hBursts(1,i),timeVals(waveBounds{i}(1,k):waveBounds{i}(2,k)),0,'|','Color',colorVals(k,:));
             end
 
             % plot the rest of the TW parameters
@@ -311,21 +288,43 @@ burstMatrix = cell(1,numFrequencyRanges);
             xticks(hStats(2,i),0);
             xticklabels(hStats(2,i),'');
             legend(hStats(2,i),{'Speed'},'Location','best','AutoUpdate','off')
+            
+            dirTemp = wrapToPi(mean(outputsTW{i}.direction,'omitnan'));
+            % dirTemp(isnan(dirTemp)) = 0;
+            % dirTemp(isnan(dirTemp)) = 0;
+            plot(hStats(3,i),timeVals,dirTemp,'color',colorNamesFreqRanges(i,:));
+            axis(hStats(3,i),[axisRange1List{2},-4 4]);
+            xticks(hStats(3,i),0);
+            xticklabels(hStats(3,i),'');
+            legend(hStats(3,i),{'Direction'},'Location','best','AutoUpdate','off')
 
-            plot(hStats(3,i),timeVals,outputsTW{i}.coh,'color','r');
-            hold(hStats(3,i),'on');
-            % plot(hStats(3,i),timeVals,abs(mean(exp(1i*phaseMatrix(:,:,i)))),'color','m');
-            plot(hStats(3,i),timeVals,outputsTW{i}.burstVec,'color','k');
-%           yline(hStats(3,i),elecFrac,'color','b');
-            line(axisRange1List{2},[elecFrac elecFrac],'parent',hStats(3,i),'color','b');
-            axis(hStats(3,i),[axisRange1List{2} 0 1]);
-            legend(hStats(3,i),{'Coh','Bursts'},'Location','best','AutoUpdate','off')
+            plot(hStats(4,i),timeVals,outputsTW{i}.coh,'color','r');
+            hold(hStats(4,i),'on');
+            plot(hStats(4,i),timeVals,sum(burstMatrix(:,:,i),'omitnan')/numGoodElectrodes,'color','k');
+            line(axisRange1List{2},[elecFrac elecFrac],'parent',hStats(4,i),'color','b');
+            axis(hStats(4,i),[axisRange1List{2} 0 1]);
+            legend(hStats(4,i),{'Coh','Bursts'},'Location','best','AutoUpdate','off')
 
             % Plot angle plots for calculated directions 
             % makePolarPlot({waveVector{i}(~isnan(waveVector{i}))},10,hGridPlots2(3,i),[0.7 0.7 0.7])
             % hold(hGridPlots2(3,i),'on')
+            % tempDirs = {wrapToPi(uniqueDirs{i})-pi};
             makePolarPlot(num2cell(uniqueDirs{i}),10,hGridPlots2(3,i),colorVals)
         end
+        
+        htextPanel1 = uipanel('Unit','Normalized','Position',[0.89 0.05 0.02 0.02]);
+        uicontrol('Parent',htextPanel1,'Unit','Normalized','Position',[0 0 1 1],'Style','text','String',num2str(['270',char(176)]),'FontSize',fontSizeTiny);
+        
+        htextPanel2 = uipanel('Unit','Normalized','Position',[0.89 0.27 0.02 0.02]);
+        uicontrol('Parent',htextPanel2,'Unit','Normalized','Position',[0 0 1 1],'Style','text','String',num2str(['90',char(176)]),'FontSize',fontSizeTiny);
+
+        htextPanel3 = uipanel('Unit','Normalized','Position',[0.78 0.16 0.02 0.02]);
+        uicontrol('Parent',htextPanel3,'Unit','Normalized','Position',[0 0 1 1],'Style','text','String',num2str(['180',char(176)]),'FontSize',fontSizeTiny);
+
+        htextPanel4 = uipanel('Unit','Normalized','Position',[0.99 0.16 0.02 0.02]);
+        uicontrol('Parent',htextPanel4,'Unit','Normalized','Position',[0 0 1 1],'Style','text','String',num2str(['0',char(176)]),'FontSize',fontSizeTiny);
+
+
     end
 %
     function plot_Callback2(~,~)
@@ -344,6 +343,8 @@ burstMatrix = cell(1,numFrequencyRanges);
             %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%
             % Initialize
             for j=1:numFrequencyRanges
+                
+                xLinesBurst(1,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hBursts(1,j),'YLim'),'parent',hBursts(1,j),'LineWidth',2,'Color','black'); %#ok<*AGROW>
                 for k=1:size(hSignal,1)
                     xLinesSignal(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2,'Color','black'); %#ok<*AGROW>
                 end
@@ -355,6 +356,7 @@ burstMatrix = cell(1,numFrequencyRanges);
             for ind = 1:numel(timeRangeProp)
                 if state==0 % if state changes to 0, delete lines and return
                     for j=1:numFrequencyRanges
+                        delete(xLinesBurst(1,j));
                         for k=1:size(hSignal,1)
                             delete(xLinesSignal(k,j));
                         end
@@ -368,6 +370,9 @@ burstMatrix = cell(1,numFrequencyRanges);
                 for j=1:numFrequencyRanges
 
                     % Delete old lines and create new ones
+                    delete(xLinesBurst(1,j));
+                    xLinesBurst(1,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hBursts(1,j),'YLim'),'parent',hBursts(1,j),'LineWidth',2,'Color','black');
+    
                     for k=1:size(hSignal,1)
                         delete(xLinesSignal(k,j));
                         xLinesSignal(k,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2,'Color','black');
@@ -401,9 +406,9 @@ burstMatrix = cell(1,numFrequencyRanges);
                     V = sin(directionGrid);
                     quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))                  
 
-                    imagesc(tmpMatrix2,'parent',hGridPlots2(2,j));
+                    imagesc(cos(tmpMatrix2),'parent',hGridPlots2(2,j));
                     colormap(hGridPlots2(2,j),'hsv');
-                    caxis(hGridPlots2(2,j),[-pi pi]);
+                    caxis(hGridPlots2(2,j),[-1 1]);
                     colorbar(hGridPlots2(2,j),'northoutside');
                 end
                 drawnow
@@ -418,6 +423,8 @@ burstMatrix = cell(1,numFrequencyRanges);
         claGivenPlotHandle(hSignal);
         claGivenPlotHandle(hStats);
         claGivenPlotHandle(hGridPlots2([3,6]))
+        claGivenPlotHandle(hBursts)
+        
     end
     function rescale_Callback(~,~)
         freqLims = [str2double(get(hAxisRange1Min{1},'String')) str2double(get(hAxisRange1Max{1},'String'))];
@@ -435,6 +442,8 @@ burstMatrix = cell(1,numFrequencyRanges);
         for i=1:numFrequencyRanges
             rescalePlotHandleX(hStats(:,i),timeLims);
             rescalePlotHandleX(hSignal(1,i),timeLims);
+            rescalePlotHandleX(hBursts(1,i),timeLims);
+            
             
         end
     end

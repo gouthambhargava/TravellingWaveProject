@@ -25,7 +25,7 @@ for phasei = 1:numel(allPhases)
     %bin the data and get counts
     nBins = 360/binWidth;
     allBins = linspace(0,360,nBins);
-    wrappedAngles = wrapTo360(rad2deg(phaseValues));
+    wrappedAngles = wrapTo360(rad2deg(phaseValues-pi));
     meanAngle = circ_mean(deg2rad(wrappedAngles)');
     meanAngle = deg2rad(mod(rad2deg(meanAngle),360));
     binnedVals = discretize(wrappedAngles,allBins);
@@ -56,7 +56,7 @@ for phasei = 1:numel(allPhases)
     line([0 0],[-1 1],'Color',[0.811764705882353,0.811764705882353,0.811764705882353],'parent',plotAxis)
     circle(0,0,1,[0,0,0],plotAxis);
     circle(0,0,0.5,[0.811764705882353,0.811764705882353,0.811764705882353],plotAxis);
-    axis(plotAxis,[-1,1,-1,1])
+    axis(plotAxis,[-1.06,1.06,-1.06,1.06])
     
 end 
     axis(plotAxis,'off')
