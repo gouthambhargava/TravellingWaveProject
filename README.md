@@ -6,6 +6,7 @@ The following programs should be downloaded and added to Matlab path
 2. CommonPrograms: https://github.com/supratimray/CommonPrograms
 3. Circular statistics toolbox: https://github.com/circstat/circstat-matlab
 4. Script for Watsons U2 test: https://github.com/pierremegevand/watsons_u2
+5. Script for wave classification: https://github.com/mullerlab/wave-matlab
 
 ** remove EEGLAB from path if added as it interferes with PCA in matlab (only for EEG data) **
 
@@ -18,7 +19,11 @@ Glossary of scripts
 - getWaveMetrics - a wrapper for circular linear regression (simple or cluster based) for grouping electrodes
 - getWaveSegments - Segments/epochs the direction values to give a list of waves and their corrosponding time indices in the given trial
 - circRegMod - calcualtes circular regression and give TW parameters
-- getOverlappingWaves - identifies overlapping waves between slow and fast gamma in a given trial. 
+- getOverlappingWaves - identifies overlapping waves between slow and fast gamma in a given trial.
+- getWaveAndBurstOverlap - function to analyze the relation between wave segment and gamma burst times
+- circCorrPermute - function to test circular correlation with monte carlo correction
+- circMeanNan - alternative function for circ_mean (ignores NaN's)
+- getMultiWaveType - wrapper that uses functions in 'wave-matlab' toolbox to classify waves into planar/spiral/complex.
  
 Image Plots
 - makePolarPLot - generate polar plots
@@ -29,6 +34,8 @@ Image Plots
 Project Specific scripts (Dual Gamma Wave Project)
 - generateFig1-5 - generate respective figures  
 - runDisplayTWData - Gives an example of the entire pipeline
+- generateSupplementaryVideo
+- calcualteCC_allConditions - uses circCorrPermute to get CC for multiple conditions of overlapping waves
 
 %%
 Options in GUI
@@ -51,7 +58,7 @@ yRange (25-35Hz) - sets y axis ranges for all line plots corrosponding to slow g
 yRange (40-60Hz) - sets y axis ranges for all line plots corrosponding to fast gamma (on the right)
 
 %% Travelling wave panel %% 
-Electrode Fraction - '0.6' (default)
+Electrode Fraction - '0.5' (default)
                    Once gamma bursts are detected, bursts across all electrodes are summed and only those time points
                    which have bursts across 60% (default) of electrodes are taken forward for wave detection. 
 electrodeChoices - 'selected'/'all' 
