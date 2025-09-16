@@ -1,4 +1,4 @@
-Travelling wave project - to charactarize travelling waves in gamma (30-60Hz) from microelectrode recordings in NHP visual cortex. 
+Travelling wave project - to charactarize travelling waves in gamma (30-60Hz) from microelectrode recordings in NHP visual cortex (dualGammaWaveProject). 
 run 'runDisplayTWData.m'
 
 The following programs should be downloaded and added to Matlab path 
