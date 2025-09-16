@@ -1,4 +1,4 @@
-function [newBounds,allDirSg,allDirFg,allUniqueDirs] = getOverlappingWaves(dirSg,sgBounds,dirFg,fgBounds,overlap)
+function [newBounds,allDirSg,allDirFg,allUniqueDirs,emptyCell] = getOverlappingWaves(dirSg,sgBounds,dirFg,fgBounds,overlap)
 %Find the time indices of overlapping waves between slow and fast gamma
 %waves. 
 % Inputs - the vector of direction values for waves identified in slow and fast gamma are given by dirSg and dirFg 
@@ -24,7 +24,6 @@ for j = 1:size(sgBounds,2)
         end
     end
 end
-% allOverCounts{i} = overlapTW'; %(find(overlapTW(:,1)),:);
 
 %% find out which times overlap and remove the ones that dont
 % sigCells = find(cellfun(@numel,allOverCounts));
@@ -36,29 +35,38 @@ end
 % % clear i j k fgBounds sgBounds sgCounts fgCounts singleFg singleTW
 
 %% get new boundries, only the TW's which overlap
-newBounds = cell(2,size(overlapTW,1));
-for j = 1:size(overlapTW,1)
-    newBounds{1}(:,j) = sgBounds(:,overlapTW(j,1));
-    newBounds{2}(:,j) = fgBounds(:,overlapTW(j,2));
-end
+if ~isempty(overlapTW)
+    newBounds = cell(2,size(overlapTW,1));
+    for j = 1:size(overlapTW,1)
+        newBounds{1}(:,j) = sgBounds(:,overlapTW(j,1));
+        newBounds{2}(:,j) = fgBounds(:,overlapTW(j,2));
+    end
 
-% get unique directions of overlapping waves
-allDirSg = nan(size(dirSg));
-allDirFg = nan(size(dirFg));
+    % get unique directions of overlapping waves
+    allDirSg = nan(size(dirSg));
+    allDirFg = nan(size(dirFg));
 
-uniqueDirs1 = [];
-uniqueDirs2 = [];
-for j = 1:size(newBounds{1},2)
-    bounds1 = newBounds{1}(:,j);
-    bounds2 = newBounds{2}(:,j);
-    allDirSg(bounds1(1):bounds1(2)) = dirSg(bounds1(1):bounds1(2));
-    allDirFg(bounds2(1):bounds2(2)) = dirFg(bounds2(1):bounds2(2));
-    vals1 = circ_mean(unique(dirSg(bounds1(1):bounds1(2)))');
-    vals2 = circ_mean(unique(dirFg(bounds2(1):bounds2(2)))');
-    vals1(isnan(vals1)) = [];
-    vals2(isnan(vals2)) = [];
-    uniqueDirs1 = cat(2,uniqueDirs1,vals1);
-    uniqueDirs2 = cat(2,uniqueDirs2,vals2);
+    uniqueDirs1 = [];
+    uniqueDirs2 = [];
+    for j = 1:size(newBounds{1},2)
+        bounds1 = newBounds{1}(:,j);
+        bounds2 = newBounds{2}(:,j);
+        allDirSg(bounds1(1):bounds1(2)) = dirSg(bounds1(1):bounds1(2));
+        allDirFg(bounds2(1):bounds2(2)) = dirFg(bounds2(1):bounds2(2));
+        vals1 = circ_mean(unique(dirSg(bounds1(1):bounds1(2)))');
+        vals2 = circ_mean(unique(dirFg(bounds2(1):bounds2(2)))');
+        vals1(isnan(vals1)) = [];
+        vals2(isnan(vals2)) = [];
+        uniqueDirs1 = cat(2,uniqueDirs1,vals1);
+        uniqueDirs2 = cat(2,uniqueDirs2,vals2);
+    end
+    allUniqueDirs = cat(1,uniqueDirs1,uniqueDirs2);
+    emptyCell = 0;
+else
+    allUniqueDirs = [nan;nan];
+    newBounds = nan;
+    allDirSg = nan(size(dirSg));
+    allDirFg = nan(size(dirFg));
+    emptyCell = 1;
 end
-allUniqueDirs = cat(1,uniqueDirs1,uniqueDirs2);
 end

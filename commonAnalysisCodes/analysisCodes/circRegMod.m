@@ -29,7 +29,7 @@ function [direction,spatial_frequency,sl,Rsquared,PGD] = circRegMod(circularV,li
 % for calculating sfRange, specify the interelectrode distance in mm. Is
 % set to 0.4mm by default (MEA interelectrode distance). Details in Das, A., Zabeh, E., Jacobs, J. (2023). How to Detect and Analyze Traveling Waves in Human Intracranial EEG Oscillations?. In: Axmacher, N. (eds) Intracranial EEG. Studies in Neuroscience, Psychology and Behavioral Economics. Springer, Cham. https://doi.org/10.1007/978-3-031-20910-9_30
 if nargin<3
-    angleRange = 0:5:360;
+    angleRange = 0:10:360;
 end
 if nargin<4
     sfLimit = 0.4;
@@ -50,8 +50,8 @@ myfun = @(slope1,slope2)sqrt((sum(cos(phase-slope1*pos_x-slope2*pos_y)/length(ph
 % limit of spatial frequency is depend on the spatial nyquist
 % frequency. 
 
-angle_range=pi*angleRange/180;
-spatial_frequency_range=sfRange*pi/180;
+angle_range=pi*(angleRange)/180;
+spatial_frequency_range=(sfRange)*pi/180;
 
 [angleMatrix,spatial_frequency_Matrix] = meshgrid(angle_range,spatial_frequency_range); % make it to a matrix for arrayfun
 

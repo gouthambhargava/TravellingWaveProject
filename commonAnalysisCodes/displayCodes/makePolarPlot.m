@@ -25,7 +25,7 @@ for phasei = 1:numel(allPhases)
     %bin the data and get counts
     nBins = 360/binWidth;
     allBins = linspace(0,360,nBins);
-    wrappedAngles = wrapTo360(rad2deg(phaseValues-pi));
+    wrappedAngles = wrapTo360(rad2deg(phaseValues+pi));
     meanAngle = circ_mean(deg2rad(wrappedAngles)');
     meanAngle = deg2rad(mod(rad2deg(meanAngle),360));
     binnedVals = discretize(wrappedAngles,allBins);
@@ -60,9 +60,9 @@ for phasei = 1:numel(allPhases)
     
 end 
     axis(plotAxis,'off')
-    text(plotAxis,1.01,0,['0',char(176)],'FontSize',20)
-    text(plotAxis,-1.2,0,['180',char(176)],'FontSize',20)
-    text(plotAxis,0,-1.05,['270',char(176)],'FontSize',20)
+    text(plotAxis,1.02,0,['0',char(176)],'FontSize',8)
+    text(plotAxis,-1.3,0,['180',char(176)],'FontSize',8)
+    % text(plotAxis,0,-1.05,['270',char(176)],'FontSize',12)
     axis(plotAxis,'square')
     
 

@@ -1,4 +1,4 @@
-function [direction, pgd,spatialFreq] = getWaveMetrics(elecLocs,phaseData,burstLocs,waveMethod,neighbourLimit,electrodeChoice,numElectrodeCutoff)
+function [direction, pgd,spatialFreq] = getWaveMetrics(elecLocs,phaseData,burstLocs,waveMethod,neighbourLimit,numElectrodeCutoff)
 
 % Inputs
 % elecLocs is the list of electrode locations (x and y locations in the grid - dimensions reduced from 3D)
@@ -12,13 +12,14 @@ function [direction, pgd,spatialFreq] = getWaveMetrics(elecLocs,phaseData,burstL
 %% initialize the outputs
 elecLocs = reshape(elecLocs,length(elecLocs),2);
 numElectrodes = size(phaseData,1);
-if strcmpi(electrodeChoice,'all') %take all electrodes
-    burstElecs = 1:numGoodElectrodes;
-else
-    burstElecs = find(burstLocs);%find indices of electrodes that have bursts
-end
+% if strcmpi(electrodeChoice,'all') %take all electrodes
+%     burstElecs = 1:numGoodElectrodes;
+% else
+%     burstElecs = find(burstLocs);%find indices of electrodes that have bursts
+% end
 
-
+burstElecs = find(burstLocs);%find indices of electrodes that have bursts
+ 
 if waveMethod ==1
     direction = nan;
     pgd = nan;
@@ -29,7 +30,6 @@ if waveMethod ==1
         direction = repmat(direction,numElectrodes,1);
         spatialFreq = repmat(spatialFreq,numElectrodes,1);
         pgd = repmat(pgd,numElectrodes,1);
-    
 else
     direction = nan(numElectrodes,1);
     pgd = nan(numElectrodes,1);
