@@ -93,3 +93,5 @@ select ElectrodeFraction - 0.5
        wave wobble - 5
        waveSegoptions - Full segment wobble
        wave detection - simple circlin regression 
+
+% a demonstration of the analysis pipeline has been provided in the 'demoVideo.avi' which shows an analysis in M1 with simple circular regression and cluster based circular regression. 
