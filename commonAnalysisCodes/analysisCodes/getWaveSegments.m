@@ -138,7 +138,7 @@ else % the pgd and directions are used to calculate wave strength. Based on Das,
     end
     stability = zscoreNan(stability);
     stability(stability<0) = nan;
-    stability(stability>0) = 1;
+    % stability(stability>0) = 1;
     
     [waveVector,waveBounds] = simpleWaveSegments(stability,lengthLimit); 
 end

@@ -25,15 +25,6 @@ for j = 1:size(sgBounds,2)
     end
 end
 
-%% find out which times overlap and remove the ones that dont
-% sigCells = find(cellfun(@numel,allOverCounts));
-% allOverCounts = allOverCounts(sigCells);
-% boundriesTimesSg = boundriesTimesSg(sigCells);
-% boundriesTimesFg = boundriesTimesFg(sigCells);
-% dirSg = dirSg(sigCells,:);
-% dirFg = dirFg(sigCells,:);
-% % clear i j k fgBounds sgBounds sgCounts fgCounts singleFg singleTW
-
 %% get new boundries, only the TW's which overlap
 if ~isempty(overlapTW)
     newBounds = cell(2,size(overlapTW,1));

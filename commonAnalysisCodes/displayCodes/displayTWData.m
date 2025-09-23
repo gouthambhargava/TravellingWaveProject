@@ -364,7 +364,7 @@ waveBounds = cell(1,numFrequencyRanges);
 
             % Plot angle plots for calculated directions
             for k = 1:size(waveVector,1)
-                makePolarPlot(uniqueDirs(k,i),10,hGridPlots2(3,i),waveColors(k,:))
+                makePolarPlot(uniqueDirs(k,i),10,hGridPlots2(3,i),waveColors(k,:),0)
                 hold(hGridPlots2(3,i),'on');
             end
         end

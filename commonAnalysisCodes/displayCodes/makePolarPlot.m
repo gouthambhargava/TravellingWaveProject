@@ -1,4 +1,4 @@
-function makePolarPlot(allPhases,binWidth,plotAxis,colorVals)
+function makePolarPlot(allPhases,binWidth,plotAxis,colorVals,meanAngleFlag)
 % plot polar histogram and the mean direction
 % Inputs - phaseValues: Give phase values as a cell. Multiple phase vectors
 % may be given in a cell, in which case they will be plotted in different
@@ -9,6 +9,10 @@ function makePolarPlot(allPhases,binWidth,plotAxis,colorVals)
 
 if nargin<4
     colorVals = parula(numel(allPhases));
+end
+
+if nargin<5
+    meanAngleFlag=1;
 end
 
 if isempty(plotAxis) % create axis
@@ -47,10 +51,11 @@ for phasei = 1:numel(allPhases)
         patch([0 xcords 0],[0 ycords 0],color,'parent',plotAxis)
         hold(plotAxis,'on')
     end
-
-    arrowColor = color+(1-color)*0.2;
-    quiver(0,0,cos(meanAngle),sin(meanAngle),'AutoScaleFactor',0.9,'LineWidth',3,'Color',arrowColor,'parent',plotAxis)
-    hold(plotAxis,'on')
+    if meanAngleFlag==1
+        arrowColor = color+(1-color)*0.2;
+        quiver(0,0,cos(meanAngle),sin(meanAngle),'AutoScaleFactor',0.9,'LineWidth',3,'Color',arrowColor,'parent',plotAxis)
+    end
+        hold(plotAxis,'on')
 
     line([-1 1],[0 0],'Color',[0.811764705882353,0.811764705882353,0.811764705882353],'parent',plotAxis)
     line([0 0],[-1 1],'Color',[0.811764705882353,0.811764705882353,0.811764705882353],'parent',plotAxis)

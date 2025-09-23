@@ -20,8 +20,14 @@ if ~exist('nPerm','var'); nPerm = [];  end
 % Parameters
 fs = round(1/(timeVals(2)-timeVals(1))); %sampling frequency
 timePoints = length(timeVals);
+searchTimePts = dsearchn(timeVals',0.25):dsearchn(timeVals',0.75);
 numGoodElectrodes = length(locList);
-neighbourLimit = round(numGoodElectrodes*0.5);
+neighbourLimit = round(numGoodElectrodes*0.75);
+
+if strcmp(electrodeChoice,'selected')~=1
+    burstMat = ones(numGoodElectrodes,timePoints);
+end
+
 
 burstMat(isnan(burstMat)) = 0;
 burstVec = nansum(burstMat)/numGoodElectrodes;
@@ -31,6 +37,7 @@ burstVec(burstVec~=1) = nan;
 if ~isempty(nPerm)
     pgdPerm = zeros(timePoints,nPerm);
 end
+
 
 numElectrodeCutoff = round(electrodeFraction*numel(goodElectrodes));
 
@@ -50,14 +57,13 @@ direction = nan(numGoodElectrodes,timePoints);
 sFreq = nan(numGoodElectrodes,timePoints);
 coh = zeros(timePoints,1);
 
-
 %% run circ reg after getting significant electrodes from burst detection
-for timei = 1:timePoints
-    phiGrid = phiMat(:,timei);
-    burstLocs = burstMat(:,timei);
+for timei = 1:numel(searchTimePts)
+    phiGrid = phiMat(:,searchTimePts(timei));
+    burstLocs = burstMat(:,searchTimePts(timei));
     % cluster(timei,1) = numel(elecs);
-    coh(timei,1) = abs(mean(exp(1i* phiGrid(burstLocs>0))));
-    [direction(:,timei), pgd(:,timei),sFreq(:,timei)] = getWaveMetrics(locList,phiGrid,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);
+    coh(searchTimePts(timei),1) = abs(mean(exp(1i* phiGrid(burstLocs>0))));
+    [direction(:,searchTimePts(timei)), pgd(:,searchTimePts(timei)),sFreq(:,searchTimePts(timei))] = getWaveMetrics(locList,phiGrid,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);
     % do regression analysis on the polar and linear coordinates
     if ~isempty(nPerm)
         permVar = zeros(length(phiGrid),nPerm);
