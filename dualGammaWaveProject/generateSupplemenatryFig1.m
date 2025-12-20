@@ -14,7 +14,7 @@ numFrequencyRanges = numel(freqRangeList);
 
 %% get wave data for 5 and 10 deg for default ori and SF
 % for M1
-outputs = outputsTW1{4};
+load('alpaH_42_0.5T_selected_met1.mat')
 numTrials = length(outputs);
 numTrials1 = numTrials;
 waveVector1_5 = nan(numTrials,length(timeVals),numFrequencyRanges);
@@ -47,7 +47,7 @@ ovWaves1_10(~isnan(ovWaves1_10)) = 1;
 clear dirSG1_5 dirSG1_10 dirFG1_5 dirFG1_10 waveBounds1_5 waveBounds1_10 i numTrials iFreq iTrails outputs
 
 % for M2
-outputs = outputsTW2{4};
+load('kesariH_42_0.5T_selected_met1.mat')
 numTrials = length(outputs);
 numTrials2 = numTrials;
 waveVector2_5 = nan(numTrials,length(timeVals),numFrequencyRanges);

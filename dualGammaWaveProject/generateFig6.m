@@ -1,7 +1,13 @@
 % load outputs and data
-load('D:\IISC_work\gitScripts\FinalWobbleScripts\kesari24Data.mat')
-load('D:\IISC_work\TWGitScripts\TravellingWaveProject\dualGammaWaveProject\data\kesariHM2.mat')
+dataPath = 'F:\monkeyData\data';
+gridType = 'Microelectrode';
+subjectName='alpaH'; expDate = '210817'; protocolName = 'GRF_002'; 
+sPos = 2; % spatial frequency: 0.5 (1), 1(2), 2 (3), 4 (4), 8 (5), all SFs (6). Note that the same code can be used for the size project also later where stimulus size is changed instead of spatial frequency
+oriPos = 4; % orientation: 0 (1), 22.5 (2), 45 (3), 67.5 (4), 90 (5), 112.5 (6), 135 (7), 157.5 (8), all orientations (9)
+[mData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
 
+
+load('alpaH_42_0.5T_selected_met2.mat')
 numTrials = size(outputs,2);
 wobble = 0;
 segOption = 4;
@@ -47,29 +53,11 @@ for i = 1:numFrequencyRanges
     end
 end
 
+waveVectorFull = cell(numFrequencyRanges,numTrials);
 for i = 1:numTrials
     [waveVectorFull{1,i},~,~,~,waveType{1,i}] = getWaveParameters(outputs{1,i},squeeze(phases(:,i,:,1)),locList,timeVals,10,0, 4,boundryLims,2);
     [waveVectorFull{2,i},~,~,~,waveType{2,i}] = getWaveParameters(outputs{2,i},squeeze(phases(:,i,:,2)),locList,timeVals,10,0, 4,boundryLims,2);
 end
-
-% waveVectorFull = nan(3,numTrials,length(timeVals),numFrequencyRanges);
-% 
-% for i = 1:numTrials
-%     waveType = waveTypeSG{i};
-%     bounds = waveBounds{1,i};
-%     for j = 1:size(bounds,2)
-%         waveVectorFull(waveType(j),i,bounds(1,j):bounds(2,j),1) = 1;
-%     end
-% end
-% 
-% for i = 1:numTrials
-%     waveType = waveTypeFG{i};
-%     bounds = waveBounds{2,i};
-%     for j = 1:size(bounds,2)
-%         waveVectorFull(waveType(j),i,bounds(1,j):bounds(2,j),2) = 1;
-%     end
-% end
-
 
 intPts = nan(numTrials,length(timeVals));
 overlap = 0.5;
@@ -77,7 +65,7 @@ for i = 1:numTrials
     [~,~,~,~,~,intPts(i,:)] = getOverlappingWaves(waveVector(i,:,1),waveBounds{1,i},waveVector(i,:,2),waveBounds{2,i},overlap);
 end
 boundries = [0.25 0.75];
-%%
+%
 trialId = 1:numTrials;
 subplot(1,2,1)
 plotWavesAllTrials(waveVector,timeVals,[0.25 0.75],intPts)
@@ -107,7 +95,7 @@ for j = 1:numTrials
 end
 yline(trialId,'--','LineWidth',0.5,'Color','black')
 xlim(boundries)
-ylim([0 36])
+ylim([0 numTrials+1])
 yticks(0.5:1:(numTrials+0.5))
 yticklabels(num2str(trialId'))
 xlabel('Time (s)')

@@ -1,6 +1,8 @@
 %% calculate and plot wave directions - overlapping and nonoverlapping
-outputsM1 = outputsTW1{4};
-outputsM2 = outputsTW2{4};
+load('alpaH_42_0.5T_selected_met1.mat')
+outputsM1 = outputs;
+load('kesariH_42_0.5T_selected_met1.mat')
+outputsM2 = outputs;
 
 % define some parameters for wave detection
 wobbleLim1 = 0; %degree

@@ -1,5 +1,7 @@
 %generate fig 4 - final
 % set up some parameters
+outputsTW1 = {load('alpaH_12_0.5T_selected_met1.mat'),load('alpaH_22_0.5T_selected_met1.mat'),load('alpaH_32_0.5T_selected_met1.mat'),load('alpaH_42_0.5T_selected_met1.mat'),load('alpaH_52_0.5T_selected_met1.mat'),load('alpaH_62_0.5T_selected_met1.mat'),load('alpaH_72_0.5T_selected_met1.mat'),load('alpaH_82_0.5T_selected_met1.mat')};
+outputsTW2 = {load('kesariH_12_0.5T_selected_met1.mat'),load('kesariH_22_0.5T_selected_met1.mat'),load('kesariH_32_0.5T_selected_met1.mat'),load('kesariH_42_0.5T_selected_met1.mat'),load('kesariH_52_0.5T_selected_met1.mat'),load('kesariH_62_0.5T_selected_met1.mat'),load('kesariH_72_0.5T_selected_met1.mat'),load('kesariH_82_0.5T_selected_met1.mat')};
 
 thresh = 0.5;
 electrodeFraction = 0.5;
@@ -15,8 +17,6 @@ sPos = 2; % spatial frequency: 0.5 (1), 1(2), 2 (3), 4 (4), 8 (5), all SFs (6). 
 oriPos = 1:8; % orientation: 0 (1), 22.5 (2), 45 (3), 67.5 (4), 90 (5), 112.5 (6), 135 (7), 157.5 (8), all orientations (9)
 stimPeriod = [0.25 0.75];
 
-outputsTW1 = {outputsTWA21,outputsTWA22,outputsTWA23,outputsTWA24,outputsTWA25,outputsTWA26,outputsTWA27,outputsTWA28};
-outputsTW2 = {outputsTWK21,outputsTWK22,outputsTWK23,outputsTWK24,outputsTWK25,outputsTWK26,outputsTWK27,outputsTWK28};
 %% load data and get wave parameters
 %for monkey 1
 wobble1 = 5; % in deg

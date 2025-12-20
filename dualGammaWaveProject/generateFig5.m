@@ -1,9 +1,7 @@
 %% generate fig 5
 % load data for all ori combinations
-% get bursts calculation for all
-% generate outputs for both SG and FG for every ori combination
-% run getWaveAndBurst overlap
-% plot the results
+outputsTW1 = {load('alpaH_12_0.5T_selected_met1.mat'),load('alpaH_22_0.5T_selected_met1.mat'),load('alpaH_32_0.5T_selected_met1.mat'),load('alpaH_42_0.5T_selected_met1.mat'),load('alpaH_52_0.5T_selected_met1.mat'),load('alpaH_62_0.5T_selected_met1.mat'),load('alpaH_72_0.5T_selected_met1.mat'),load('alpaH_82_0.5T_selected_met1.mat')};
+outputsTW2 = {load('kesariH_12_0.5T_selected_met1.mat'),load('kesariH_22_0.5T_selected_met1.mat'),load('kesariH_32_0.5T_selected_met1.mat'),load('kesariH_42_0.5T_selected_met1.mat'),load('kesariH_52_0.5T_selected_met1.mat'),load('kesariH_62_0.5T_selected_met1.mat'),load('kesariH_72_0.5T_selected_met1.mat'),load('kesariH_82_0.5T_selected_met1.mat')};
 
 % set up some parameters
 minBurstSize = 25; % in ms

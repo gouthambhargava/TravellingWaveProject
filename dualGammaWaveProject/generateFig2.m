@@ -1,15 +1,17 @@
 %% generate fig 2
 % load data
-load('D:\IISC_work\TWGitScripts\TravellingWaveProject\dualGammaWaveProject\data\alpaHM1.mat')
-load('D:\IISC_work\gitScripts\FinalWobbleScripts\alpa24Data.mat')
+% load('D:\IISC_work\TWGitScripts\TravellingWaveProject\dualGammaWaveProject\data\alpaHM1.mat')
+% load('D:\IISC_work\gitScripts\FinalWobbleScripts\alpa24Data.mat')
 
-% dataPath = 'F:\monkeyData\data';
-% gridType = 'Microelectrode';
-% subjectName='alpaH'; expDate = '210817'; protocolName = 'GRF_002'; 
-% sPos = 2; % spatial frequency: 0.5 (1), 1(2), 2 (3), 4 (4), 8 (5), all SFs (6). Note that the same code can be used for the size project also later where stimulus size is changed instead of spatial frequency
-% oriPos = 4; % orientation: 0 (1), 22.5 (2), 45 (3), 67.5 (4), 90 (5), 112.5 (6), 135 (7), 157.5 (8), all orientations (9)
-% [mData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
-mData = allData;
+% load data
+dataPath = 'F:\monkeyData\data';
+gridType = 'Microelectrode';
+subjectName='alpaH'; expDate = '210817'; protocolName = 'GRF_002'; 
+sPos = 2; % spatial frequency: 0.5 (1), 1(2), 2 (3), 4 (4), 8 (5), all SFs (6). Note that the same code can be used for the size project also later where stimulus size is changed instead of spatial frequency
+oriPos = 4; % orientation: 0 (1), 22.5 (2), 45 (3), 67.5 (4), 90 (5), 112.5 (6), 135 (7), 157.5 (8), all orientations (9)
+[mData,goodElectrodes,timeVals,rfData,parameters] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
+% mData = allData;
+load('alpaH_42_0.5T_selected_met1.mat');
 outputsTW = outputs;
 
 thresh = 0.5;
@@ -195,8 +197,6 @@ plot(timeVals,temp*-0.05,'|','LineWidth',1.2,'Color',colorValsNo(1,:))
 temp = directionOv;
 temp(~isnan(temp)) = 1;
 plot(timeVals,temp*-0.05,'|','LineWidth',1.2,'Color',colorVals(1,:))
-
-
 
 ylabel('PGD')
 xlabel('Time(s)')
