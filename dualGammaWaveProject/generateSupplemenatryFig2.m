@@ -1,6 +1,6 @@
 % load outputs and data
-load('D:\IISC_work\gitScripts\FinalWobbleScripts\alpa24Data.mat')
-load('D:\IISC_work\TWGitScripts\TravellingWaveProject\dualGammaWaveProject\data\alpaHM2.mat')
+load('D:\IISC_work\gitScripts\FinalWobbleScripts\kesari24Data.mat')
+load('D:\IISC_work\TWGitScripts\TravellingWaveProject\dualGammaWaveProject\data\kesariHM2.mat')
 
 numTrials = size(outputs,2);
 wobble = 0;
@@ -42,34 +42,33 @@ for i = 1:numFrequencyRanges
     for j = 1:numTrials
         [waveVector(j,:,i),~,waveBounds{i,j}] = getWaveSegments(outputs{i,j},timeVals,[],4,[0.25 0.75], 10);
         directions(:,:,j,i) = outputs{i,j}.direction;
-    end
-end
+        
 
-waveTypeSG = cell(1,numTrials);
-waveTypeFG = cell(1,numTrials);
-
-for i = 1:numTrials
-    [~, ~,waveTypeSG{i},~,~,~] = interpAndWaveClassi(squeeze(phases(:,i,:,1)),directions(:,:,i,1),locList,waveBounds{1,i},1,1);
-    [~, ~,waveTypeFG{i},~,~,~] = interpAndWaveClassi(squeeze(phases(:,i,:,2)),directions(:,:,i,2),locList,waveBounds{2,i},1,1);
-end
-
-waveVectorFull = nan(3,numTrials,length(timeVals),numFrequencyRanges);
-
-for i = 1:numTrials
-    waveType = waveTypeSG{i};
-    bounds = waveBounds{1,i};
-    for j = 1:size(bounds,2)
-        waveVectorFull(waveType(j),i,bounds(1,j):bounds(2,j),1) = 1;
     end
 end
 
 for i = 1:numTrials
-    waveType = waveTypeFG{i};
-    bounds = waveBounds{2,i};
-    for j = 1:size(bounds,2)
-        waveVectorFull(waveType(j),i,bounds(1,j):bounds(2,j),2) = 1;
-    end
+    [waveVectorFull{1,i},~,~,~,waveType{1,i}] = getWaveParameters(outputs{1,i},squeeze(phases(:,i,:,1)),locList,timeVals,10,0, 4,boundryLims,2);
+    [waveVectorFull{2,i},~,~,~,waveType{2,i}] = getWaveParameters(outputs{2,i},squeeze(phases(:,i,:,2)),locList,timeVals,10,0, 4,boundryLims,2);
 end
+
+% waveVectorFull = nan(3,numTrials,length(timeVals),numFrequencyRanges);
+% 
+% for i = 1:numTrials
+%     waveType = waveTypeSG{i};
+%     bounds = waveBounds{1,i};
+%     for j = 1:size(bounds,2)
+%         waveVectorFull(waveType(j),i,bounds(1,j):bounds(2,j),1) = 1;
+%     end
+% end
+% 
+% for i = 1:numTrials
+%     waveType = waveTypeFG{i};
+%     bounds = waveBounds{2,i};
+%     for j = 1:size(bounds,2)
+%         waveVectorFull(waveType(j),i,bounds(1,j):bounds(2,j),2) = 1;
+%     end
+% end
 
 
 intPts = nan(numTrials,length(timeVals));
@@ -78,7 +77,7 @@ for i = 1:numTrials
     [~,~,~,~,~,intPts(i,:)] = getOverlappingWaves(waveVector(i,:,1),waveBounds{1,i},waveVector(i,:,2),waveBounds{2,i},overlap);
 end
 boundries = [0.25 0.75];
-
+%%
 trialId = 1:numTrials;
 subplot(1,2,1)
 plotWavesAllTrials(waveVector,timeVals,[0.25 0.75],intPts)
@@ -90,14 +89,21 @@ ylabel('Trials')
 title('All waves:M1')
 
 subplot(1,2,2)
-colors = parula(3);
-for i = 1:size(waveVectorFull,1)
-    plot(timeVals,squeeze(waveVectorFull(i,:,:,1)).*trialId'-0.3,'LineWidth',1.2,'Color',colors(i,:))
-    hold on
-end
-for i = 1:size(waveVectorFull,1)
-    plot(timeVals,squeeze(waveVectorFull(i,:,:,2)).*trialId'-0.5,'LineWidth',1.2,'Color',colors(i,:))
-    hold on
+colors = winter(3);
+
+for j = 1:numTrials
+    waveVectorSG = waveVectorFull{1,j};
+    waveTypeSG = waveType{1,j};
+    for i = 1:size(waveVectorSG,1)
+        plot(timeVals,squeeze(waveVectorSG(i,:,:,1)).*trialId(j)-0.3,'LineWidth',1.2,'Color',colors(waveTypeSG(i),:))
+        hold on
+    end
+    waveVectorFG = waveVectorFull{2,j};
+    waveTypeFG = waveType{2,j};
+    for i = 1:size(waveVectorFG,1)
+        plot(timeVals,squeeze(waveVectorFG(i,:,:,1)).*trialId(j)-0.5,'LineWidth',1.2,'Color',colors(waveTypeFG(i),:))
+        hold on
+    end
 end
 yline(trialId,'--','LineWidth',0.5,'Color','black')
 xlim(boundries)
@@ -108,7 +114,10 @@ xlabel('Time (s)')
 ylabel('Trials')
 title('All classified waves:M1')
 
+annotation('textbox',[0.91, 0.787, 0.1, 0.1],'String','Planar Wave','FontSize',12,'EdgeColor','none','Color',colors(1,:))
+annotation('textbox',[0.91, 0.757, 0.1, 0.1],'String','Spiral Wave','FontSize',12,'EdgeColor','none','Color',colors(2,:))
+annotation('textbox',[0.91, 0.727, 0.1, 0.1],'String','Complex Wave','FontSize',12,'EdgeColor','none','Color',colors(3,:))
 
-plot(timeVals,overlap.*trialId'-0.4,'LineWidth',1,'Color','black')
+
 
 

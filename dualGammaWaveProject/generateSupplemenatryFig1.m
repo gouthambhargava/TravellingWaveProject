@@ -87,7 +87,7 @@ trialsNum1 = 0.6:numTrials1;
 plotWavesAllTrials(waveVector1_5,timeVals,[0.25 0.75])
 hold on
 plot(timeVals,ovWaves1_5.*trialsNum1','LineWidth',0.8,'Color','black')
-ylim([0 numTrials1+1])
+ylim([0 numTrials1+0.5])
 ylabel('Trials')
 xlabel('Time (s)')
 title(['All waves- 5',char(176),' deviation:M1'])
@@ -96,7 +96,7 @@ subplot(3,4,[2,6,10])
 plotWavesAllTrials(waveVector1_10,timeVals,[0.25 0.75])
 hold on
 plot(timeVals,ovWaves1_10.*trialsNum1','LineWidth',0.8,'Color','black')
-ylim([0 numTrials1+1])
+ylim([0 numTrials1+0.5])
 ylabel('Trials')
 xlabel('Time (s)')
 title(['All waves- 10',char(176),' deviation:M1'])
@@ -106,7 +106,7 @@ trialsNum2 = 0.6:numTrials2;
 plotWavesAllTrials(waveVector2_5,timeVals,[0.25 0.75])
 hold on
 plot(timeVals,ovWaves2_5.*trialsNum2','LineWidth',0.8,'Color','black')
-ylim([0 numTrials1+1])
+ylim([0 numTrials2+0.5])
 ylabel('Trials')
 xlabel('Time (s)')
 title(['All waves- 5',char(176),' deviation:M2'])
@@ -116,7 +116,7 @@ subplot(3,4,[4,8,12])
 plotWavesAllTrials(waveVector2_10,timeVals,[0.25 0.75])
 hold on
 plot(timeVals,ovWaves2_10.*trialsNum2','LineWidth',0.8,'Color','black')
-ylim([0 numTrials1+1])
+ylim([0 numTrials2+0.5])
 ylabel('Trials')
 xlabel('Time (s)')
 title(['All waves- 10',char(176),' deviation:M2'])
@@ -124,3 +124,7 @@ annotation('textbox',[0.09,0.98, 0, 0], 'string', 'A','FontSize',20,'FontWeight'
 annotation('textbox',[0.3,0.98, 0, 0], 'string', 'B','FontSize',20,'FontWeight','bold')
 annotation('textbox',[0.505,0.98, 0, 0], 'string', 'C','FontSize',20,'FontWeight','bold')
 annotation('textbox',[0.72,0.98, 0, 0], 'string', 'D','FontSize',20,'FontWeight','bold')
+
+annotation('textbox',[0.01, 0.587, 0.1, 0.1],'String','Slow Gamma','FontSize',12,'Color',colorVals(1,:),'EdgeColor','none')
+annotation('textbox',[0.01, 0.550, 0.1, 0.1],'String','Fast Gamma','FontSize',12,'Color',colorVals(2,:),'EdgeColor','none')
+annotation('textbox',[0.01, 0.510, 0.1, 0.1],'String','Overlapping Waves','FontSize',12,'Color','black','EdgeColor','none')

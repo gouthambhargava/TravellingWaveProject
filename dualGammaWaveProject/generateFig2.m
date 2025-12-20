@@ -48,8 +48,8 @@ for iElec = 1:numGoodElectrodes
 end
 
 %% define some parameters for wave detection
-trial = 21;
-wave = 1;
+trial = 22;
+wave = 3;
 lengthLimit = 10; %ms
 boundryLims = [0.25 0.75];
 wobbleLim = 0; %degree
@@ -111,7 +111,7 @@ annotation('textbox',[0.01, 0.587, 0.1, 0.1],'String','Slow Gamma','FontSize',12
 annotation('textbox',[0.01, 0.550, 0.1, 0.1],'String','Fast Gamma','FontSize',12,'Color',colorVals(2,:),'EdgeColor','none')
 annotation('textbox',[0.01, 0.510, 0.1, 0.1],'String','Overlapping Waves','FontSize',12,'Color','black','EdgeColor','none')
 
-%% get overlapping TW's
+% get overlapping TW's
 
 
 pgd(:,1) = outputsTW{1,trial}.pgd(1,:);
@@ -155,11 +155,11 @@ phaseInd2 = floor(linspace(1,length(durIndices),6));
 timeValsInt = timeVals(durIndices);
 timeValsInt = [timeValsInt(1),timeValsInt(end)];
 
-dirData1 = dirData1+deg2rad(45);
-dirData2 = dirData2+deg2rad(100);
+% dirData1 = dirData1+deg2rad(45);
+% dirData2 = dirData2+deg2rad(100);
 %% get background gradient with imagesc for TW progression - for figure 2 - slow gamma
 figure(2)
-xVals = [0 100 100 71.1 71 0];
+xVals = [0 100 100 87 83 0];
 yVals = [0 0 100 120 120 100];
 vertices = cat(1,xVals,yVals)';
 faces = 1:numel(xVals);

@@ -4,11 +4,11 @@ function [waveVector,uniqueDirs,waveBounds,clusterCube,waveType,directionCube,ph
 % based method) and gives the direction, phase and clusters for plotting
 % gridLayout = rot90(reshape(1:81,[9,9]),2); %set the grid layout
 direction = outputs.direction;
-waveVector = nan(3,length(timeVals));
+% waveVector = nan(3,length(timeVals));
 if waveMethod == 2
     [~,~,waveBounds] = getWaveSegments(outputs,timeVals,wobble,segMethod,boundryLims,lengthLimit);
     if  ~isempty(waveBounds)
-        [~, ~,waveType,clusterCube,directionCube,phaseCube] = interpAndWaveClassi(phases,direction,locList,waveBounds,1,waveMethod);
+        [~, ~,waveType,clusterCube,directionCube,phaseCube] = interpAndWaveClassi(phases,direction,locList,waveBounds,0,waveMethod);
         waveVector = nan(numel(waveType),length(timeVals));
         % uniqueDirsExp = cell(1,3);
         uniqueDirs = cell(1,numel(waveType));
@@ -19,6 +19,11 @@ if waveMethod == 2
         end
     else
         clusterCube = [];
+        waveType = 1;
+        directionCube = [];
+        phaseCube = [];
+        waveVector = nan(1,length(timeVals));
+        uniqueDirs = [];
     end
 else
     [~,uniqueDirs,waveBounds] = getWaveSegments(outputs,timeVals,wobble,segMethod, boundryLims,lengthLimit);

@@ -103,7 +103,7 @@ stdSpeed = [std(allSpeedSG),std(allSpeedFG)];
 
 %% get overlap and CC for method 2
 %load alpa and kesari HM1 and HM2
-load('D:\IISC_work\TWGitScripts\TravellingWaveProject\dualGammaWaveProject\data\alpaHM2.mat')
+load('D:\IISC_work\TWGitScripts\TravellingWaveProject\dualGammaWaveProject\data\kesariHM2.mat')
 numTrials = size(outputs,2);
 numFrequencyRanges = size(outputs,1);
 segOption = 4;
@@ -158,9 +158,9 @@ dir1(isnan(dir1)) = [];
 dir2(isnan(dir2)) = [];
 
 
-[cc(1), cc(2)] = circCorrPermute(dir1,dir2,50,1)
+[cc(1), cc(2)] = circCorrPermute(dir1,dir2,50,1);
 % [cc(1), cc(2)] = circ_corrcc(dir1,dir2);
-clear allDir numTrials ovBounds emptyTrials intPts allOverlaps overlaps waveVector waveBounds bounds
+clear allDir numTrials emptyTrials intPts allOverlaps overlaps waveVector waveBounds bounds
 %% get kruskal wallis/anova for gamma bins
 dataPath = 'F:\monkeyData\data';
 gridType = 'Microelectrode';
