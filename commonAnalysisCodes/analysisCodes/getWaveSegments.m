@@ -49,7 +49,7 @@ else
 end
 %% diverge into type of segmentation required
 if segOption==1 % get wave segments where segments are purely seperated by significant PGD. Segmentation is very lenient
-    [waveVector,waveBounds] = simpleWaveSegments(direction,lengthLimit);
+    [waveVector,waveBounds] = getsimpleWaveSegments(direction,lengthLimit);
     uniqueDirs = [];
     for j = 1:size(waveBounds,2)
         uniqueDirs = cat(2,uniqueDirs,circ_mean(direction(waveBounds(1,j):waveBounds(2,j))'));
@@ -63,7 +63,7 @@ elseif segOption==2 % Imposes an additional criteria on wave segmentation, based
     % the angular difference between successive time points. Each time
     % point can vary only within the wobbleLim. Variation beyond this limit
     % marks the start of a new wave.
-    % [newDirection,boundries] = simpleWaveSegments(direction,lengthLimit);
+    % [newDirection,boundries] = getsimpleWaveSegments(direction,lengthLimit);
     % if ~isempty(boundries)
     %     for k = 1:size(boundries,2)
     %         tempBounds = newDirection(boundries(1,k):boundries(2,k));
@@ -100,7 +100,7 @@ elseif segOption==2 % Imposes an additional criteria on wave segmentation, based
     % point can vary only within the wobbleLim. Variation beyond this limit
     % marks the start of a new wave.
 
-    [waveVector,waveBounds] = simpleWaveSegments(directionNew,lengthLimit);
+    [waveVector,waveBounds] = getsimpleWaveSegments(directionNew,lengthLimit);
 
     % waveVector = nan(1,length(direction));
     uniqueDirs = [];
@@ -113,7 +113,7 @@ elseif segOption==2 % Imposes an additional criteria on wave segmentation, based
 
 elseif segOption==3 % ensures that wave segments from option 1 are further fragmented so that the total amount of variation between
     % the start and end of a wave is within the wobbleLim
-    [directionTemp,boundries] = simpleWaveSegments(direction,lengthLimit);
+    [directionTemp,boundries] = getsimpleWaveSegments(direction,lengthLimit);
     directionTemp = wrapTo2Pi(directionTemp);
     revisedBounds = [];
     for k = 1:size(boundries,2)
@@ -149,13 +149,13 @@ else % the pgd and directions are used to calculate wave strength. Based on Das,
     stability(stability<0) = nan;
     % stability(stability>0) = 1;
     
-    [waveVector,waveBounds] = simpleWaveSegments(stability,lengthLimit); 
+    [waveVector,waveBounds] = getsimpleWaveSegments(stability,lengthLimit); 
 
 end
 end
 
 %% additional functions
-function [waveVector,boundries] = simpleWaveSegments(dataOrig,lengthLimit)
+function [waveVector,boundries] = getsimpleWaveSegments(dataOrig,lengthLimit)
 if nargin<2
     lengthLimit = 0;
 end
@@ -189,7 +189,7 @@ for i = 1:numel(uniqueAngles)
     data(abs(dataDiff)>deviation) = 0;
     data(data==0) = nan;
 
-    [~,boundsInt] = simpleWaveSegments(data);
+    [~,boundsInt] = getsimpleWaveSegments(data);
     segWaveBounds = cat(2,segWaveBounds,boundsInt);
 end
 

@@ -406,13 +406,13 @@ h3 = nexttile;
 sgMean = cell2mat(m2_0deg{1}(1,:));
 fgMean = cell2mat(m2_0deg{1}(2,:));
 
-makePolarPlot({sgMean,fgMean},binWidth,h3,colorVals,1)
+makePolarPlot({fgMean,sgMean},binWidth,h3,colorVals,1)
 title('Directions - Unsorted')
 
 h4 = nexttile;
 sgOvMean = m2_0deg{2}(1,:);
 fgOvMean = m2_0deg{2}(2,:);
-makePolarPlot({sgOvMean,fgOvMean},binWidth,h4,colorVals,1)
+makePolarPlot({fgOvMean,sgOvMean},binWidth,h4,colorVals,1)
 title('Directions - Overlapping')
 
 % get scatter plot - 0 deg

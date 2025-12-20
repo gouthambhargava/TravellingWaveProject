@@ -15,7 +15,7 @@
 % analyses are therefore done upfront even though results are shown only
 % for some electrodes and trials.
 
-function displayTWData(gridType,subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,lengthLimit,loadDataFlag)
+function displayTWData(gridType,subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,lengthLimit)
 
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;fontSizeTiny = 6;
 backgroundColor = 'w'; panelHeight = 0.125;
@@ -227,10 +227,13 @@ lengthLimit = 10;
         % the GUI now takes analysed data to show plots
         % as waveMethod 2 takes 10-15 minutes per trial. This has been
         % applied for wave method 1 as well.
+        % naming convention for data - subject name/SFPos/oriPos/electrode fraction/electrode selection/wave method
+        % ex alpaH_24_0.5T_elecChoice1_met2
         disp('Getting TW parameters');
         % waveVector = nan(3,length(timeVals),numFrequencyRanges);
-        if loadDataFlag == 1
-            outputs = load([subjectName,'M',num2str(waveMethod),'.mat']);
+        filename = [subjectName,'_',num2str(oriPos),num2str(sPos),'_',num2str(elecFrac),'T_',elecChoice,'_met',num2str(waveMethod),'.mat'];
+        if isfile(filename)
+        outputs = load(filename);
             outputsTW = outputs.outputs(:,trialNum);
             for i = 1:numFrequencyRanges
                 burstVec = nansum(burstMatrix(:,:,i))/numGoodElectrodes;
@@ -239,17 +242,21 @@ lengthLimit = 10;
                 outputsTW{i}.burstVec = burstVec;
             end
         else
-            for i = 1:numFrequencyRanges
-                outputsTW{i} = getTWCircParams(phaseMatrix(:,:,i),burstMatrix(:,:,i),timeVals,goodElectrodes,locList,elecFrac,elecChoice,gridType,waveMethod);
+            for j = 1:numTrials
+                for i = 1:numFrequencyRanges
+                    bursts = burstTS(:,j,:,i);
+                    phases = angle(hilbert(squeeze(filteredSignal(:,j,:,i))'))';
+                outputs{i,j} = getTWCircParams(phases,bursts,timeVals,goodElectrodes,locList,elecFrac,elecChoice,gridType,waveMethod);
+                end
             end
+            cd('dualGammaWaveProject/data')
+            save(filename,'outputs')
+            outputsTW = outputs{:,trialNum};
         end
 
         for i = 1:numFrequencyRanges
             [waveVector{i},uniqueDirs{i},~,clusterCube,waveType,directionCube,phaseCube] = getWaveParameters(outputsTW{i},phaseMatrix(:,:,i),locList,timeVals,lengthLimit, wobbleLim, segOption,stimulusPeriodS,waveMethod);
-            % outputsTW{i}.waveVector = waveVector;
-            % outputsTW{i}.uniqueDirs = uniqueDirs;
             outputsTW{i}.clusterCube = clusterCube;
-            % outputsTW{i}.waveType = waveType;
             outputsTW{i}.directionCube = directionCube;
             outputsTW{i}.phaseCube = phaseCube;  
             outputsTW{i}.refCube = refCube(:,:,:,i);

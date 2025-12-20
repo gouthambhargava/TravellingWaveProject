@@ -7,6 +7,7 @@ dataPath = 'F:\monkeyData\data';
 gridType = 'Microelectrode';
 subjectName='alpaH'; expDate = '210817'; protocolName = 'GRF_002';
 [mData,goodElectrodes,timeVals,~,~] = loadData(subjectName,expDate,protocolName,dataPath,gridType,sPos,oriPos);
+load('alpaH_42_0.5T_selected_met1.mat');
 outputsTW = outputs;
 %%
 numTrials = size(mData,2);
@@ -30,7 +31,7 @@ end
 
 %%
 trial = 22;
-wave = 3;
+wave = 1;
 wobbleLim = 0;
 segOption = 3;
 boundryLims = [0.25 0.75];
@@ -90,7 +91,7 @@ u1 = cos(dirData1);
 v1 = sin(dirData1);
 u2 = cos(dirData2);
 v2 = sin(dirData2);
-%
+%%
 f = figure;
 set(gcf, 'Position', get(0, 'Screensize'));
 % f.Position = [100 100 540 400];
@@ -119,15 +120,16 @@ plot(pgdGrid,timeVals,c*-0.3,'|','Color','black')
 title(pgdGrid,'PGD of overlapping TWs:M1')
 
 frames = [];
-writerObj = VideoWriter('SuppVideo1.avi');
-writerObj.FrameRate = 10;
+% writerObj = VideoWriter('SuppVideo1.avi');
+% writerObj.FrameRate = 10;
 % open the video writer
-open(writerObj);
+% open(writerObj);
 for i = 1:numel(durOverlap)
     h = line([timeValues(i),timeValues(i)],[-0.4,1],'Parent',pgdGrid,'Color','black');
     legend(pgdGrid,'Slow Gamma','Fast Gamma','location','best')
     xlim(pgdGrid,[0 0.8])
-    imagesc(cos(phaseData1(:,:,i)),'Parent',phaseGrid1)
+    imagesc(cos(flipud(phaseData1(:,:,i))),'Parent',phaseGrid1)
+    set(gca, 'YDir', 'normal')
     clim(phaseGrid1,[-1 1])
     hold(phaseGrid1,'on')
     quiver(x,y,u1(:,:,i),v1(:,:,i),'color','white','AutoScaleFactor',0.9,'parent',phaseGrid1)
@@ -136,6 +138,7 @@ for i = 1:numel(durOverlap)
     title(phaseGrid1,['Slow Gamma:', num2str(timeValues(i)),'s'])
     % colormap(phaseGrid1,'jet')
     imagesc(cos(phaseData2(:,:,i)),'Parent',phaseGrid2)
+    set(gca, 'YDir', 'normal')
     clim(phaseGrid2,[-1 1])
     hold(phaseGrid2,'on')
     quiver(x,y,u2(:,:,i),v2(:,:,i),'color','white','AutoScaleFactor',0.9,'parent',phaseGrid2)
@@ -145,7 +148,7 @@ for i = 1:numel(durOverlap)
     % colormap(phaseGrid2,'jet')
     pause(0.1)
     frames = getframe(gcf);
-    writeVideo(writerObj, frames);
+    % writeVideo(writerObj, frames);
     delete(h)
 end
-close(writerObj)
+% close(writerObj)
