@@ -29,7 +29,7 @@ for phasei = 1:numel(allPhases)
     %bin the data and get counts
     nBins = 360/binWidth;
     allBins = linspace(0,360,nBins);
-    wrappedAngles = wrapTo360(rad2deg(phaseValues+pi));
+    wrappedAngles = wrapTo360(rad2deg(phaseValues));
     meanAngle = circ_mean(deg2rad(wrappedAngles)');
     meanAngle = deg2rad(mod(rad2deg(meanAngle),360));
     binnedVals = discretize(wrappedAngles,allBins);
@@ -48,7 +48,7 @@ for phasei = 1:numel(allPhases)
     for i = 1:numel(counts)
         xcords = counts(i)*[real(binCord(i)),real(binCord(i+1))];
         ycords = counts(i)*[imag(binCord(i)),imag(binCord(i+1))];
-        patch([0 xcords 0],[0 ycords 0],color,'parent',plotAxis)
+        patch([0 xcords 0],[0 ycords 0],color,'parent',plotAxis,'EdgeColor','none') %,'FaceAlpha',0.75
         hold(plotAxis,'on')
     end
     if meanAngleFlag==1
@@ -67,7 +67,7 @@ end
     axis(plotAxis,'off')
     text(plotAxis,1.02,0,['0',char(176)],'FontSize',8)
     text(plotAxis,-1.3,0,['180',char(176)],'FontSize',8)
-    % text(plotAxis,0,-1.05,['270',char(176)],'FontSize',12)
+    text(plotAxis,0,-1.05,['270',char(176)],'FontSize',8)
     axis(plotAxis,'square')
     
 

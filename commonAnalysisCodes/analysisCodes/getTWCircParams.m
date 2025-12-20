@@ -22,7 +22,7 @@ fs = round(1/(timeVals(2)-timeVals(1))); %sampling frequency
 timePoints = length(timeVals);
 searchTimePts = dsearchn(timeVals',0.25):dsearchn(timeVals',0.75);
 numGoodElectrodes = length(locList);
-neighbourLimit = round(numGoodElectrodes*0.75);
+neighbourLimit = round(numGoodElectrodes*0.25);
 
 if strcmp(electrodeChoice,'selected')~=1
     burstMat = ones(numGoodElectrodes,timePoints);
@@ -30,7 +30,7 @@ end
 
 
 burstMat(isnan(burstMat)) = 0;
-burstVec = nansum(burstMat)/numGoodElectrodes;
+burstVec = sum(burstMat)/numGoodElectrodes;
 burstVec(burstVec>electrodeFraction) = 1;
 burstVec(burstVec~=1) = nan;
 
@@ -59,16 +59,16 @@ coh = zeros(timePoints,1);
 
 %% run circ reg after getting significant electrodes from burst detection
 for timei = 1:numel(searchTimePts)
-    phiGrid = phiMat(:,searchTimePts(timei));
+    phiVals = phiMat(:,searchTimePts(timei));
     burstLocs = burstMat(:,searchTimePts(timei));
     % cluster(timei,1) = numel(elecs);
-    coh(searchTimePts(timei),1) = abs(mean(exp(1i* phiGrid(burstLocs>0))));
-    [direction(:,searchTimePts(timei)), pgd(:,searchTimePts(timei)),sFreq(:,searchTimePts(timei))] = getWaveMetrics(locList,phiGrid,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);
-    % do regression analysis on the polar and linear coordinates
+    coh(searchTimePts(timei),1) = abs(mean(exp(1i* phiVals(burstLocs>0))));
+    [direction(:,searchTimePts(timei)), pgd(:,searchTimePts(timei)),sFreq(:,searchTimePts(timei))] = getWaveMetrics(locList,phiVals,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);
+    % do regression analysis on -the polar and linear coordinates
     if ~isempty(nPerm)
-        permVar = zeros(length(phiGrid),nPerm);
+        permVar = zeros(length(phiVals),nPerm);
         for perm = 1:nPerm
-            permVar(:,perm) = phiGrid(randperm(length(circularCord)),:);
+            permVar(:,perm) = phiVals(randperm(length(circularCord)),:);
         end
         for perm = 1:nPerm
            [~, pgd(:,timei),~] = getWaveMetrics(locList,phaseMat,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);

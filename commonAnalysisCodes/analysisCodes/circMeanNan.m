@@ -36,5 +36,5 @@ end
 
 % compute weighted sum of cos and sin of angles
 mu = angle(nansum(exp(1i*alpha),dim));
-mu(mu==0) = nan;
+% mu(mu==0) = nan;
 end

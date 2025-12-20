@@ -39,6 +39,12 @@ else
     % pgd = mean(outputsTW.pgd,'omitnan');
     % direction = mean(outputsTW.direction,'omitnan');
     direction = outputsTW.direction;
+    pgd = outputsTW.pgd;
+    direction(isnan(pgd)) = nan;
+
+    if size(direction,1)>1
+        direction = direction(1,:);
+    end
     % direction(setdiff(1:length(timeVals),boundryLims)) = nan;
 end
 %% diverge into type of segmentation required
@@ -50,6 +56,9 @@ if segOption==1 % get wave segments where segments are purely seperated by signi
     end
 
 elseif segOption==2 % Imposes an additional criteria on wave segmentation, based on wobbleLim.
+    if min(size(direction))>1
+        direction = direction(1,:);
+    end
     % waves within this earlier segmentation are further degraded based on
     % the angular difference between successive time points. Each time
     % point can vary only within the wobbleLim. Variation beyond this limit
@@ -84,7 +93,7 @@ elseif segOption==2 % Imposes an additional criteria on wave segmentation, based
     % waveBounds = revisedBounds;
     directionNew = wrapTo2Pi(reshape(direction,[1,length(direction)]));
     direcDiff = diff([directionNew,0]);
-    sigPts = find(abs(direcDiff)<deg2rad(wobbleLim));
+    sigPts = find(abs(direcDiff)<=deg2rad(wobbleLim));
     directionNew(setdiff(1:length(directionNew),sigPts)) = nan;
     % waves within this earlier segmentation are further degraded based on
     % the angular difference between successive time points. Each time
@@ -98,7 +107,7 @@ elseif segOption==2 % Imposes an additional criteria on wave segmentation, based
     if ~isempty(waveBounds)
         for j = 1:size(waveBounds,2)
             % waveVector(revisedBounds(1,j):revisedBounds(2,j)) = direction(revisedBounds(1,j):revisedBounds(2,j));
-            uniqueDirs = cat(2,uniqueDirs,circ_mean(direction(waveBounds(1,j):waveBounds(2,j))'));
+            uniqueDirs = cat(1,uniqueDirs,circ_mean(direction(waveBounds(1,j):waveBounds(2,j))'));
         end
     end
 
@@ -141,6 +150,7 @@ else % the pgd and directions are used to calculate wave strength. Based on Das,
     % stability(stability>0) = 1;
     
     [waveVector,waveBounds] = simpleWaveSegments(stability,lengthLimit); 
+
 end
 end
 

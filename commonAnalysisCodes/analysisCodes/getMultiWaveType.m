@@ -4,7 +4,7 @@ function [cc, pval,waveType,sources] = getMultiWaveType(phases,direction,locList
 % inputs - phases - phases values m x n (electrodes x time) 
 %          directionGrid - wave direction values m x n (electrodes x time)
 %          waveBoundries - indices of waves over the trial
-%          clusterFlag - if set to 1, source is calculated otherwise the
+%          clusterFlag - if set to 1, source is calculated. Otherwise the
 %          centre of the grid is taken as the source
 %          arrayType - 'microelectrode' or 'EEG'
 

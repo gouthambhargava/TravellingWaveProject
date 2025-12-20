@@ -15,7 +15,7 @@
 % analyses are therefore done upfront even though results are shown only
 % for some electrodes and trials.
 
-function displayTWData(gridType,subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,stimPeriod,lengthLimit,loadDataFlag)
+function displayTWData(gridType,subjectName,expDate,protocolName,dataPath,sPos,oriPos,selectedElectrodes,analysisMethod,freqRangeList,lengthLimit,loadDataFlag)
 
 fontSizeSmall = 10; fontSizeMedium = 12; fontSizeLarge = 16;fontSizeTiny = 6;
 backgroundColor = 'w'; panelHeight = 0.125;
@@ -23,8 +23,8 @@ backgroundColor = 'w'; panelHeight = 0.125;
 
 numFrequencyRanges = length(freqRangeList);
 colorNamesFreqRanges = gray(numFrequencyRanges+1);
-waveColors = cat(1,[0 0 1],[0 1 0],[0 1 1]);
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%% Get data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% waveColors = cat(1,[0 0 1],[0 1 0],[0 1 1]);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmpi(gridType,'Microelectrode')
     disp('Getting data...');
@@ -44,9 +44,11 @@ hGridPlots = getPlotHandles(1,2,[0.025 0.65 0.3 0.2],0.01,0.02,0);
 numSelectedElectrodes = length(selectedElectrodes);
 colorNamesElectrodes = jet(numSelectedElectrodes);
 stimulusDurationS = [0 0.8]; % Stimulus duration to be highlighted
-% baselinePeriodS = [-0.5 0];
+baselinePeriodS = [-0.5 0];
 stimulusPeriodS = [0.25 0.75];
 analysisPeriodS = [-0.5 1];
+thresholdFactor = 3;
+filterOrder = 4;
 electrodeArray = showRFPositionsSelectedElectrodes(hGridPlots,goodElectrodes,selectedElectrodes,rfData,parameters,colorNamesElectrodes);
 
 % get location for each electrode for segmentation into clusters
@@ -55,7 +57,7 @@ for iElec = 1:numGoodElectrodes
     [locList(iElec,1),locList(iElec,2)] = find(electrodeArray==goodElectrodes(iElec));
 end
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%  Data selection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%  Data selection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% %%
 hPanel1 = uipanel('Title','Data','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0 1-panelHeight 0.18 panelHeight]);
 
 % Selected electrodes
@@ -166,16 +168,15 @@ hBursts = getPlotHandles(1,numFrequencyRanges,[0.35 0.33 0.425 0.17],0.025,0.01)
 hSignal = getPlotHandles(numSelectedElectrodes,numFrequencyRanges,[0.35 0.05 0.425 0.25],0.025,0.01);
 hGridPlots2 = getPlotHandles(3,numFrequencyRanges,[0.8 0.05 0.19 0.8]);
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%% Callbacks %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%% Callbacks %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% %%
 % Needs to be plotted only once
 plotTFMT(hTF(1,1),allData,timeVals,axisRange1List0,freqRangeList,colorNamesFreqRanges,'raw',[],stimulusDurationS); % Time-frequency power spectrum for all trials
 
-phaseMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
 outputsTW = cell(1,numFrequencyRanges);
 state = 0; % state variable to display the phases
 waveVector = cell(1,numFrequencyRanges);
 uniqueDirs = cell(1,numFrequencyRanges);
-waveBounds = cell(1,numFrequencyRanges);
+lengthLimit = 10;
 
 
     function plot_Callback(~,~)
@@ -185,84 +186,82 @@ waveBounds = cell(1,numFrequencyRanges);
         trialNum = trialNumList((get(hTrial,'val')));
         wobbleLim = str2double(get(hWobbleReq,'String'));
         segOption = get(hSegReq,'val');
-        waveMethod = get(hWaveMethod,'val'); % to be implemented in future versions
-        freqReq = 2;
+        waveMethod = get(hWaveMethod,'val');
+        refPhaseChoice = get(hSelectRef,'val');
+        gridLayout = rot90(reshape(1:81,[9,9]),2); %set the grid layout, change to add EEG 
 
+        % define color scheme for waves
+        waveColors = parula(3); % 1- planar 2 -spiral 3 - complex
+        allWaveColors = cell(1,numFrequencyRanges);
 
         disp('Performing burst analysis...');
-        filteredSignal = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
-        phaseMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
-        burstMatrix = zeros(numGoodElectrodes,size(allData,3),numFrequencyRanges);
-
+        filteredSignal = zeros(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
+        burstTS = nan(numGoodElectrodes,size(allData,2),size(allData,3),numFrequencyRanges);
+        phaseMatrix = nan(numGoodElectrodes,size(allData,3),numFrequencyRanges);
+        refCube = nan(size(gridLayout,1),size(gridLayout,2),size(allData,3),numFrequencyRanges);
+        burstMatrix = nan(numGoodElectrodes,size(allData,3),numFrequencyRanges);
+        
         for i=1:numFrequencyRanges
-            [burstMatrix(:,:,i),filteredSignal(:,:,i),phaseMatrix(:,:,i)] = getFilteredBurstsTW(squeeze(allData(:,trialNum,:)),freqRangeList{i},analysisPeriodS,freqReq,timeVals);
+            for j=1:numGoodElectrodes
+                [~,~,~,burstTS(j,:,:,i),filteredSignal(j,:,:,i),~] = getHilbertBurst(squeeze(allData(j,:,:)),timeVals,thresholdFactor,0,stimulusPeriodS,baselinePeriodS,freqRangeList{i},filterOrder,1,analysisPeriodS);
+            end
+            burstMatrix(:,:,i) = burstTS(:,trialNum,:,i);
+            phaseMatrix(:,:,i) = angle(hilbert(squeeze(filteredSignal(:,trialNum,:,i))'))';
+            if refPhaseChoice==1
+                refPhase = circMeanNan(phaseMatrix(:,:,i),1);
+            else
+                refPhase = phaseMatrix(redPhaseChoice-1,:,i);
+            end
+             refMatrix = angle(exp(1i*(phaseMatrix(:,:,i) - refPhase)));
+            for e=1:numGoodElectrodes
+                refCube(locList(e,1),locList(e,2),:,i) = refMatrix(e,:);
+            end    
         end
-
+        filteredSignal = squeeze(filteredSignal(:,trialNum,:,:));
 
         %get burst fraction statistics
         elecFrac = str2double(get(hElecFrac,'string'));
         elecChoice = electrodeChoices{get(hSelectElec,'val')};
 
         %% Calculate TW parameters
-        % temporary change - the GUI now takes analysed data to show plots
+        % the GUI now takes analysed data to show plots
         % as waveMethod 2 takes 10-15 minutes per trial. This has been
         % applied for wave method 1 as well.
         disp('Getting TW parameters');
-        waveVector = nan(3,length(timeVals),numFrequencyRanges);
-        uniqueDirs = cell(3,numFrequencyRanges);
+        % waveVector = nan(3,length(timeVals),numFrequencyRanges);
         if loadDataFlag == 1
             outputs = load([subjectName,'M',num2str(waveMethod),'.mat']);
             outputsTW = outputs.outputs(:,trialNum);
-
             for i = 1:numFrequencyRanges
                 burstVec = nansum(burstMatrix(:,:,i))/numGoodElectrodes;
-                burstVec(burstVec>elecFrac) = 1;
+                burstVec(burstVec>=elecFrac) = 1;
                 burstVec(burstVec~=1) = nan;
                 outputsTW{i}.burstVec = burstVec;
-                if waveMethod ==1
-                    [~,~,waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,segOption,stimulusPeriodS,lengthLimit);
-                else
-                    [~,~,waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,4,stimulusPeriodS,lengthLimit);
-                end
-                [~, ~,waveType,~] = getMultiWaveType(phaseMatrix(:,:,i),outputsTW{i}.direction,locList,waveBounds{i},waveMethod-1);
-
-                directionTemp = outputsTW{i}.direction;
-                if min(size(directionTemp))==1
-                    directionTemp = reshape(directionTemp,[1,size(directionTemp)]); % make a row vector
-                    directionTemp = repmat(directionTemp,numGoodElectrodes,1);
-                end
-                for j = 1:size(waveBounds{i},2)
-                    tempUq = [];
-                    waveVector(waveType(j),waveBounds{i}(1,j):waveBounds{i}(2,j),i) = 1;
-                    tempUq = [tempUq,circ_mean(circMeanNan(directionTemp(:,waveBounds{i}(1,j):waveBounds{i}(2,j))))];
-                    uniqueDirs{waveType(j),i} = tempUq;
-                end
             end
         else
             for i = 1:numFrequencyRanges
                 outputsTW{i} = getTWCircParams(phaseMatrix(:,:,i),burstMatrix(:,:,i),timeVals,goodElectrodes,locList,elecFrac,elecChoice,gridType,waveMethod);
-                if waveMethod ==1
-                    [~,~,waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,segOption,stimulusPeriodS,lengthLimit);
-                else
-                    [~,uniqueDirs{i},waveBounds{i}] = getWaveSegments(outputsTW{i},timeVals,wobbleLim,4,stimulusPeriodS,lengthLimit);
-                end
-                [~, ~,waveType,~] = getMultiWaveType(phaseMatrix(:,:,i),outputsTW{i}.direction,locList,waveBounds{i},waveMethod-1);
-                directionTemp = outputsTW{i}.direction;
-                if min(size(directionTemp))==1
-                    directionTemp = reshape(directionTemp,[1,size(directionTemp)]); % make a row vector
-                    directionTemp = repmat(directionTemp,numGoodElectrodes,1);
-                end
-                for j = 1:size(waveBounds{i},2)
-                    tempUq = [];
-                    waveVector(waveType(j),waveBounds{i}(1,j):waveBounds{i}(2,j),i) = 1;
-                    tempUq = [tempUq,circ_mean(circMeanNan(directionTemp(:,waveBounds{i}(1,j):waveBounds{i}(2,j))))];
-                    uniqueDirs{waveType(j),i} = tempUq;
-                end
             end
         end
 
-        disp('TW analysis completed');
+        for i = 1:numFrequencyRanges
+            [waveVector{i},uniqueDirs{i},~,clusterCube,waveType,directionCube,phaseCube] = getWaveParameters(outputsTW{i},phaseMatrix(:,:,i),locList,timeVals,lengthLimit, wobbleLim, segOption,stimulusPeriodS,waveMethod);
+            % outputsTW{i}.waveVector = waveVector;
+            % outputsTW{i}.uniqueDirs = uniqueDirs;
+            outputsTW{i}.clusterCube = clusterCube;
+            % outputsTW{i}.waveType = waveType;
+            outputsTW{i}.directionCube = directionCube;
+            outputsTW{i}.phaseCube = phaseCube;  
+            outputsTW{i}.refCube = refCube(:,:,:,i);
+            waveColorsInt = nan(numel(waveType),3);            
+            for j = 1:numel(waveType)
+                waveColorsInt(j,:) = waveColors(waveType(j),:);
+            end
+            allWaveColors{i} = waveColorsInt;
+        end
+        disp('TW analysis completed')
         %%
+        
         if ~isequal(selectedElectrodes0,selectedElectrodes)
             showRFPositionsSelectedElectrodes(hGridPlots(1,:),goodElectrodes,selectedElectrodes0,rfData,parameters,colorNamesElectrodes);
             selectedElectrodes = selectedElectrodes0;
@@ -307,7 +306,6 @@ waveBounds = cell(1,numFrequencyRanges);
 
         % Plot TW stats
         for i = 1:numFrequencyRanges
-
             % Plot bursts
             chanVals = repmat((1:numel(goodElectrodes))',1,size(burstMatrix,2));
             plot(timeVals,burstMatrix(:,:,i)+chanVals-1,'parent',hBursts(1,i),'color','r','linewidth',1);
@@ -318,8 +316,8 @@ waveBounds = cell(1,numFrequencyRanges);
             xlim(hBursts(1,i),axisRange1List{2});
 
             % plot different wave segments with the bursts - colored individually
-            for k = 1:size(waveVector,1)
-                plot(hBursts(1,i),timeVals,squeeze(waveVector(k,:,i))*0,'|','Color',waveColors(k,:),'linewidth',1);
+            for k = 1:size(waveVector{i},1)
+                plot(hBursts(1,i),timeVals,squeeze(waveVector{i}(k,:))*0,'|','Color',allWaveColors{i}(k,:),'linewidth',1);
                 hold(hBursts(1,i),'on');
             end
 
@@ -339,6 +337,9 @@ waveBounds = cell(1,numFrequencyRanges);
 
             speedTemp = outputsTW{i}.speed;
             speedTemp(isnan(speedTemp)) = 0;
+            if size(speedTemp,1)>1
+                speedTemp = mean(speedTemp);
+            end
             plot(hStats(2,i),timeVals,speedTemp,'color',colorNamesFreqRanges(i,:));
             axis(hStats(2,i),[axisRange1List{2},0 1]);
             xticks(hStats(2,i),0);
@@ -363,10 +364,7 @@ waveBounds = cell(1,numFrequencyRanges);
             legend(hStats(4,i),{'Coh','Bursts'},'Location','best','AutoUpdate','off')
 
             % Plot angle plots for calculated directions
-            for k = 1:size(waveVector,1)
-                makePolarPlot(uniqueDirs(k,i),10,hGridPlots2(3,i),waveColors(k,:),0)
-                hold(hGridPlots2(3,i),'on');
-            end
+            makePolarPlot(uniqueDirs{i},10,hGridPlots2(3,i),allWaveColors{i},1)
         end
 
         htextPanel1 = uipanel('Unit','Normalized','Position',[0.89 0.05 0.02 0.02]);
@@ -387,26 +385,14 @@ waveBounds = cell(1,numFrequencyRanges);
     function plot_Callback2(~,~)
 
         % get inputs
-        refPhaseChoice = get(hSelectRef,'val');
+        waveMethod = get(hWaveMethod,'val'); % to be implemented in future versions
         [X,Y] = meshgrid(1:1:9);
-        directionCube = nan(size(X,1),size(X,2),length(timeVals),numFrequencyRanges);
-        
-        for freqList = 1:numFrequencyRanges
-            dirTemp = outputsTW{freqList}.direction;
-            if min(size(dirTemp))==1
-                dirTemp = reshape(dirTemp,[1,length(dirTemp)]);
-                dirTemp = repmat(dirTemp,numGoodElectrodes,1);
-            end
-            for gridi = 1:length(locList)
-                directionCube(locList(gridi,1),locList(gridi,2),:,freqList) = dirTemp(gridi,:);
-            end
-        end
 
+        % directionCube = nan(size(X,1),size(X,2),length(timeVals),numFrequencyRanges);
+        % phaseCube = nan(size(X,1),size(X,2),length(timeVals),numFrequencyRanges);
 
         if get(plotToggle,'Value') == 1
-
             state = 1; % This allows the program to start displaying the phase plots
-
             timeRangeProp = [str2double(get(hTimeRangePropMin,'String')) str2double(get(hTimeRangePropMax,'String'))];
             timeRangeProp = dsearchn(timeVals',timeRangeProp(1)):dsearchn(timeVals',timeRangeProp(2));
 
@@ -438,6 +424,16 @@ waveBounds = cell(1,numFrequencyRanges);
                 end
 
                 for j=1:numFrequencyRanges
+                    directionCube = outputsTW{j}.directionCube;
+                    phaseCube = outputsTW{j}.phaseCube;
+                    if waveMethod==1
+                        propPlotSec = cos(outputsTW{j}.refCube);
+                        plotLims = [-1 1];
+                    else
+                        propPlotSec = outputsTW{j}.clusterCube;
+                        plotLims = [0 1];
+                    end
+                        
 
                     % Delete old lines and create new ones
                     delete(xLinesBurst(1,j));
@@ -453,32 +449,24 @@ waveBounds = cell(1,numFrequencyRanges);
                     end
 
                     % plot absolute phases
-                    tmpPhases = phaseMatrix(:,timeRangeProp(ind),j);
-                    if refPhaseChoice==1
-                        refPhase = circ_mean(tmpPhases);
-                    else
-                        refPhase = tmpPhases(refPhaseChoice-1,:);
-                    end
-
-                    for e=1:numGoodElectrodes
-                        tmpMatrix1(locList(e,1),locList(e,2)) = tmpPhases(e);
-                        tmpMatrix2(locList(e,1),locList(e,2)) = angle(exp(1i*(tmpPhases(e) - refPhase)));
-                    end
-
-                    imagesc(cos(tmpMatrix1),'parent',hGridPlots2(1,j));
+                    imagesc(cos(phaseCube(:,:,timeRangeProp(ind))),'parent',hGridPlots2(1,j));
                     colormap(hGridPlots2(1,j),'parula');
-                    caxis(hGridPlots2(1,j),[-1 1]);
+                    clim(hGridPlots2(1,j),[-1 1]);
                     axis(hGridPlots2(1,j),'off')
                     colorbar(hGridPlots2(1,j),'northoutside');
                     hold(hGridPlots2(1,j),'on')
-                    directionGrid = directionCube(:,:,timeRangeProp(ind),j);
-                    U = cos(directionGrid);
-                    V = sin(directionGrid);
-                    quiver(X,Y,U,V,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))
-
-                    imagesc(cos(tmpMatrix2),'parent',hGridPlots2(2,j));
+                    directionGrid = directionCube(:,:,timeRangeProp(ind));
+                    V = cos(directionGrid);
+                    U = sin(directionGrid);
+                    quiver(X,Y,V,U,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))
+                    
+                    if waveMethod==1     
+                        imagesc(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
+                    else
+                        pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
+                    end
                     colormap(hGridPlots2(2,j),'hsv');
-                    caxis(hGridPlots2(2,j),[-1 1]);
+                    clim(hGridPlots2(2,j),plotLims);
                     colorbar(hGridPlots2(2,j),'northoutside');
                 end
                 drawnow
@@ -521,7 +509,7 @@ waveBounds = cell(1,numFrequencyRanges);
         [numRows,numCols] = size(plotHandles);
         for i=1:numRows
             for j=1:numCols
-                caxis(plotHandles(i,j),cLims);
+                clim(plotHandles(i,j),cLims);
             end
         end
     end
