@@ -217,7 +217,7 @@ lengthLimit = 10;
                 refCube(locList(e,1),locList(e,2),:,i) = refMatrix(e,:);
             end    
         end
-        filteredSignal = squeeze(filteredSignal(:,trialNum,:,:));
+        filteredSignalTF = squeeze(filteredSignal(:,trialNum,:,:));
 
         %get burst fraction statistics
         elecFrac = str2double(get(hElecFrac,'string'));
@@ -232,7 +232,7 @@ lengthLimit = 10;
         disp('Getting TW parameters');
         % waveVector = nan(3,length(timeVals),numFrequencyRanges);
         filename = [subjectName,'_',num2str(oriPos),num2str(sPos),'_',num2str(elecFrac),'T_',elecChoice,'_met',num2str(waveMethod),'.mat'];
-        if isfile(filename)
+        if exist(filename,'file')>0
         outputs = load(filename);
             outputsTW = outputs.outputs(:,trialNum);
             for i = 1:numFrequencyRanges
@@ -244,7 +244,7 @@ lengthLimit = 10;
         else
             for j = 1:numTrials
                 for i = 1:numFrequencyRanges
-                    bursts = burstTS(:,j,:,i);
+                    bursts = squeeze(burstTS(:,j,:,i));
                     phases = angle(hilbert(squeeze(filteredSignal(:,j,:,i))'))';
                 outputs{i,j} = getTWCircParams(phases,bursts,timeVals,goodElectrodes,locList,elecFrac,elecChoice,gridType,waveMethod);
                 end
@@ -303,7 +303,7 @@ lengthLimit = 10;
 
             % Plot filtered signal and show bursts
             for j=1:numFrequencyRanges
-                plot(hSignal(i,j),timeVals,squeeze(filteredSignal(ePos,:,j)),'color',colorNamesFreqRanges(j,:));
+                plot(hSignal(i,j),timeVals,squeeze(filteredSignalTF(ePos,:,j)),'color',colorNamesFreqRanges(j,:));
                 hold(hSignal(i,j),'on');
                 plot(hSignal(i,j),timeVals,squeeze(burstMatrix(ePos,:,j))-1,'color','r','linewidth',2);
                 axis(hSignal(i,j),[axisRange1List{2} axisRange2List{j}]);
