@@ -246,7 +246,7 @@ lengthLimit = 10;
                 for i = 1:numFrequencyRanges
                     bursts = squeeze(burstTS(:,j,:,i));
                     phases = angle(hilbert(squeeze(filteredSignal(:,j,:,i))'))';
-                outputs{i,j} = getTWCircParams(phases,bursts,timeVals,goodElectrodes,locList,elecFrac,elecChoice,gridType,waveMethod);
+                outputs{i,j} = getTWCircParams(phases,bursts,timeVals,locList,elecFrac,elecChoice,gridType,waveMethod);
                 end
             end
             cd('dualGammaWaveProject/data')
@@ -406,7 +406,6 @@ lengthLimit = 10;
             %%%%%%%%%%%% Plot single trial and indicate bursts %%%%%%%%%%%%
             % Initialize
             for j=1:numFrequencyRanges
-
                 xLinesBurst(1,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hBursts(1,j),'YLim'),'parent',hBursts(1,j),'LineWidth',2,'Color','black'); %#ok<*AGROW>
                 for k=1:size(hSignal,1)
                     xLinesSignal(k,j) = line([timeVals(timeRangeProp(1)) timeVals(timeRangeProp(1))],get(hSignal(k,j),'YLim'),'parent',hSignal(k,j),'LineWidth',2,'Color','black'); %#ok<*AGROW>
@@ -433,15 +432,16 @@ lengthLimit = 10;
                 for j=1:numFrequencyRanges
                     directionCube = outputsTW{j}.directionCube;
                     phaseCube = outputsTW{j}.phaseCube;
-                    if waveMethod==1
-                        propPlotSec = cos(outputsTW{j}.refCube);
-                        plotLims = [-1 1];
-                    else
-                        propPlotSec = outputsTW{j}.clusterCube;
-                        plotLims = [0 1];
-                    end
-                        
-
+                    % if waveMethod==1 % uncomment to plot the relative
+                    % phase for method 1
+                    %     propPlotSec = cos(outputsTW{j}.refCube);
+                    %     plotLims = [-1 1];
+                    % else
+                    %     propPlotSec = outputsTW{j}.clusterCube;
+                    %     plotLims = [0 1];
+                    % end
+                    propPlotSec = outputsTW{j}.clusterCube;    
+                    plotLims = [0 1];
                     % Delete old lines and create new ones
                     delete(xLinesBurst(1,j));
                     xLinesBurst(1,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hBursts(1,j),'YLim'),'parent',hBursts(1,j),'LineWidth',2,'Color','black');
@@ -461,20 +461,28 @@ lengthLimit = 10;
                     clim(hGridPlots2(1,j),[-1 1]);
                     axis(hGridPlots2(1,j),'off')
                     colorbar(hGridPlots2(1,j),'northoutside');
-                    hold(hGridPlots2(1,j),'on')
+                    %hold(hGridPlots2(1,j),'on')
+                    %directionGrid = directionCube(:,:,timeRangeProp(ind));
+                    %V = cos(directionGrid);
+                    %U = sin(directionGrid);
+                    %quiver(X,Y,V,U,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))
+                    
+                    % if waveMethod==1 %uncomment to plot the relative     
+                    %     imagesc(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
+                    % else
+                    %     pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
+                    % end
+                    pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
+                    colormap(hGridPlots2(2,j),'gray');
+                    clim(hGridPlots2(2,j),plotLims);
+                    hold(hGridPlots2(2,j),'on')
                     directionGrid = directionCube(:,:,timeRangeProp(ind));
                     V = cos(directionGrid);
                     U = sin(directionGrid);
-                    quiver(X,Y,V,U,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))
-                    
-                    if waveMethod==1     
-                        imagesc(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
-                    else
-                        pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
-                    end
-                    colormap(hGridPlots2(2,j),'hsv');
-                    clim(hGridPlots2(2,j),plotLims);
-                    colorbar(hGridPlots2(2,j),'northoutside');
+                    quiver(X,Y,V,U,'Color','red','LineWidth',1,'AutoScaleFactor',0.9,'parent',hGridPlots2(2,j))
+                    axis(hGridPlots2(2,j),'off')
+                    axis(hGridPlots2(2,j),'square')
+                    % colorbar(hGridPlots2(2,j),'northoutside');
                 end
                 drawnow
             end

@@ -1,4 +1,4 @@
-function outputs = getTWCircParams(phiMat,burstMat,timeVals,goodElectrodes,locList,electrodeFraction,electrodeChoice,arrayType,waveDetectionMethod,nPerm)
+function outputs = getTWCircParams(phiMat,burstMat,timeVals,locList,electrodeFraction,electrodeChoice,arrayType,waveDetectionMethod,nPerm)
 % Inputs
 % phiMat - phases of single trial data in electrodes x time points format
 % burstMat - time series indicting burst times in electrodes x time points format
@@ -39,7 +39,7 @@ if ~isempty(nPerm)
 end
 
 
-numElectrodeCutoff = round(electrodeFraction*numel(goodElectrodes));
+% numElectrodeCutoff = round(electrodeFraction*numel(goodElectrodes));
 
 if strcmpi(arrayType,'Microelectrode')
     elecDist = 400*10^-6; %distance between adjacent electrodes in the array in m.
@@ -59,19 +59,21 @@ coh = zeros(timePoints,1);
 
 %% run circ reg after getting significant electrodes from burst detection
 for timei = 1:numel(searchTimePts)
-    phiVals = phiMat(:,searchTimePts(timei));
-    burstLocs = burstMat(:,searchTimePts(timei));
-    % cluster(timei,1) = numel(elecs);
-    coh(searchTimePts(timei),1) = abs(mean(exp(1i* phiVals(burstLocs>0))));
-    [direction(:,searchTimePts(timei)), pgd(:,searchTimePts(timei)),sFreq(:,searchTimePts(timei))] = getWaveMetrics(locList,phiVals,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);
-    % do regression analysis on -the polar and linear coordinates
-    if ~isempty(nPerm)
-        permVar = zeros(length(phiVals),nPerm);
-        for perm = 1:nPerm
-            permVar(:,perm) = phiVals(randperm(length(circularCord)),:);
-        end
-        for perm = 1:nPerm
-           [~, pgd(:,timei),~] = getWaveMetrics(locList,phaseMat,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);
+    if burstVec(searchTimePts(timei))==1
+        phiVals = phiMat(:,searchTimePts(timei));
+        burstLocs = burstMat(:,searchTimePts(timei));
+        % cluster(timei,1) = numel(elecs);
+        coh(searchTimePts(timei),1) = abs(mean(exp(1i* phiVals(burstLocs>0))));
+        [direction(:,searchTimePts(timei)), pgd(:,searchTimePts(timei)),sFreq(:,searchTimePts(timei))] = getWaveMetrics(locList,phiVals,burstLocs,waveDetectionMethod,neighbourLimit);
+        % do regression analysis on -the polar and linear coordinates
+        if ~isempty(nPerm)
+            permVar = zeros(length(phiVals),nPerm);
+            for perm = 1:nPerm
+                permVar(:,perm) = phiVals(randperm(length(circularCord)),:);
+            end
+            for perm = 1:nPerm
+                [~, pgd(:,timei),~] = getWaveMetrics(locList,phaseMat,burstLocs,waveDetectionMethod,neighbourLimit,numElectrodeCutoff);
+            end
         end
     end
 end
