@@ -31,9 +31,9 @@ end
 
 %%
 trial = 22;
-wave = 1;
+wave = 3;
 wobbleLim = 0;
-segOption = 3;
+segOption = 2;
 boundryLims = [0.25 0.75];
 lengthLimit = 10;
 
@@ -46,11 +46,13 @@ for i = 1:numTrials
 end
 
 % find overlapping waves
-dirSG = nan(numTrials,length(timeVals));
-dirFG = nan(numTrials,length(timeVals));
+allDirSG = nan(numTrials,length(timeVals));
+allDirFG = nan(numTrials,length(timeVals));
+newBounds = cell(1,numTrials);
+uniqueDirs = cell(1,numTrials);
 overlap = 0.5;
 for i = 1:numTrials
-    [newBounds{i},allDirSG(i,:),allDirFG(i,:),uniqueDirs{i}] = getOverlappingWaves(waveVector(i,:,1),waveBounds{1,i},waveVector(i,:,2),waveBounds{2,i},overlap);
+    [newBounds{i},allDirSG(i,:),allDirFG(i,:),uniqueDirs{i},~,intPts(i,:)] = getOverlappingWaves(waveVector(i,:,1),waveBounds{1,i},waveVector(i,:,2),waveBounds{2,i},overlap);
 end
 
 
@@ -64,8 +66,7 @@ pgd2(isnan(pgd2)) = 0;
 duration1 = newBounds{1,trial}{1,1}(:,wave);
 duration2 = newBounds{1,trial}{2,1}(:,wave);
 durOverlap = intersect(duration1(1):duration1(2),duration2(1):duration2(2));
-% durOverlap for alpa for trail 15/1 has been taken as 2708:2744
-% durOverlap = 2708:2775;
+
 
 gridLayout = rot90(reshape(1:81,[9,9]),2); %set the grid layout
 phaseData1 = nan(size(gridLayout,1),size(gridLayout,2),numel(durOverlap));
@@ -83,8 +84,7 @@ for i = 1:numel(goodElectrodes)
     dirData1(x,y,:) = allDirSG(trial,durOverlap);
     dirData2(x,y,:) = allDirFG(trial,durOverlap);
 end
-% dirData1 = dirData1+deg2rad(45);
-% dirData2 = dirData2+deg2rad(100);
+
 
 timeValues = timeVals(durOverlap(1):durOverlap(end));
 u1 = cos(dirData1);
@@ -100,10 +100,10 @@ colorVals = cat(1,[52 148 186]./255,[236 112  22]./255);
 pgd1(isnan(pgd1)) = 0;
 pgd2(isnan(pgd2)) = 0;
 
-a = allDirSG(trial,:);
-b = allDirFG(trial,:);
-c = nan(1,numel(timeVals));
-c(durOverlap) = 1;
+a = waveVector(trial,:,1);
+b = waveVector(trial,:,2);
+c = intPts(trial,:);
+c(~isnan(c)) = 1;
 a(~isnan(a)) = 1;
 b(~isnan(b)) = 1;
 
@@ -120,35 +120,36 @@ plot(pgdGrid,timeVals,c*-0.3,'|','Color','black')
 title(pgdGrid,'PGD of overlapping TWs:M1')
 
 frames = [];
-% writerObj = VideoWriter('SuppVideo1.avi');
-% writerObj.FrameRate = 10;
+writerObj = VideoWriter('SuppVideo1.avi');
+writerObj.FrameRate = 10;
 % open the video writer
-% open(writerObj);
+open(writerObj);
 for i = 1:numel(durOverlap)
     h = line([timeValues(i),timeValues(i)],[-0.4,1],'Parent',pgdGrid,'Color','black');
     legend(pgdGrid,'Slow Gamma','Fast Gamma','location','best')
     xlim(pgdGrid,[0 0.8])
-    imagesc(cos(flipud(phaseData1(:,:,i))),'Parent',phaseGrid1)
-    set(gca, 'YDir', 'normal')
+    imagesc(cos(phaseData1(:,:,i)),'Parent',phaseGrid1)
     clim(phaseGrid1,[-1 1])
     hold(phaseGrid1,'on')
     quiver(x,y,u1(:,:,i),v1(:,:,i),'color','white','AutoScaleFactor',0.9,'parent',phaseGrid1)
+    set(phaseGrid1, 'YDir', 'Normal')
     axis(phaseGrid1,'square')
     axis(phaseGrid1, 'off')
     title(phaseGrid1,['Slow Gamma:', num2str(timeValues(i)),'s'])
-    % colormap(phaseGrid1,'jet')
+
     imagesc(cos(phaseData2(:,:,i)),'Parent',phaseGrid2)
-    set(gca, 'YDir', 'normal')
     clim(phaseGrid2,[-1 1])
     hold(phaseGrid2,'on')
     quiver(x,y,u2(:,:,i),v2(:,:,i),'color','white','AutoScaleFactor',0.9,'parent',phaseGrid2)
+    set(phaseGrid2, 'YDir', 'Normal')
     axis(phaseGrid2,'square')
     axis(phaseGrid2, 'off')
     title(phaseGrid2,['Fast Gamma:', num2str(timeValues(i)),'s'])
-    % colormap(phaseGrid2,'jet')
+    % drawnow
     pause(0.1)
     frames = getframe(gcf);
-    % writeVideo(writerObj, frames);
+    writeVideo(writerObj, frames);
+
+    % exportgraphics(gcf,'Supplementary Video 1.gif','Append',true);
     delete(h)
 end
-% close(writerObj)

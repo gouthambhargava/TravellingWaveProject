@@ -1,9 +1,9 @@
 %% generate fig 5
 % load data for all ori combinations
-outputsTW1 = {load('alpaH_12_0.5T_selected_met1.mat'),load('alpaH_22_0.5T_selected_met1.mat'),load('alpaH_32_0.5T_selected_met1.mat'),load('alpaH_42_0.5T_selected_met1.mat'),load('alpaH_52_0.5T_selected_met1.mat'),load('alpaH_62_0.5T_selected_met1.mat'),load('alpaH_72_0.5T_selected_met1.mat'),load('alpaH_82_0.5T_selected_met1.mat')};
-outputsTW2 = {load('kesariH_12_0.5T_selected_met1.mat'),load('kesariH_22_0.5T_selected_met1.mat'),load('kesariH_32_0.5T_selected_met1.mat'),load('kesariH_42_0.5T_selected_met1.mat'),load('kesariH_52_0.5T_selected_met1.mat'),load('kesariH_62_0.5T_selected_met1.mat'),load('kesariH_72_0.5T_selected_met1.mat'),load('kesariH_82_0.5T_selected_met1.mat')};
+outputsTW1 = {importdata('alpaH_12_0.5T_selected_met1.mat'),importdata('alpaH_22_0.5T_selected_met1.mat'),importdata('alpaH_32_0.5T_selected_met1.mat'),importdata('alpaH_42_0.5T_selected_met1.mat'),importdata('alpaH_52_0.5T_selected_met1.mat'),importdata('alpaH_62_0.5T_selected_met1.mat'),importdata('alpaH_72_0.5T_selected_met1.mat'),importdata('alpaH_82_0.5T_selected_met1.mat')};
+outputsTW2 = {importdata('kesariH_12_0.5T_selected_met1.mat'),importdata('kesariH_22_0.5T_selected_met1.mat'),importdata('kesariH_32_0.5T_selected_met1.mat'),importdata('kesariH_42_0.5T_selected_met1.mat'),importdata('kesariH_52_0.5T_selected_met1.mat'),importdata('kesariH_62_0.5T_selected_met1.mat'),importdata('kesariH_72_0.5T_selected_met1.mat'),importdata('kesariH_82_0.5T_selected_met1.mat')};
 
-% set up some parameters
+%% set up some parameters
 minBurstSize = 25; % in ms
 wobble = 0; % in degww
 thresh = 0.5;
@@ -361,3 +361,183 @@ annotation('textbox',[0.92,0.55, 0, 0], 'string', ['0',char(176)] ,'FontSize',12
 annotation('textbox',[0.92,0.38, 0, 0], 'string', ['5',char(176)],'FontSize',12,'FontWeight','bold')
 annotation('textbox',[0.92,0.20, 0, 0], 'string', ['10',char(176)],'FontSize',12,'FontWeight','bold')
 
+%%
+%% generate the plot
+colorVals = cat(1,[52 148 186]./255,[236 112 22]./255);
+subplot(3,4,1)
+burstData = sum(slowGammaOverlap1{4});
+burstData = burstData/max(burstData);
+bar(burstData,'FaceColor',colorVals(1,:))
+% xlabel('Gamma Burst Bins')
+ylabel(['Ori-67.5',char(176)])
+xlim([0.5 20.5])
+% ylim([1 size(burstData,1)])
+title('Slow Gamma:M1')
+
+subplot(3,4,2)
+burstData = sum(fastGammaOverlap1{4});
+burstData = burstData/max(burstData);
+bar(burstData,'FaceColor',colorVals(2,:))
+% xlabel('Gamma Burst Bins')
+ylabel(['Ori-67.5',char(176)])
+xlim([0.5 20.5])
+% ylim([1 size(burstData,1)])
+title('Fast Gamma:M1')
+
+subplot(3,4,3)
+burstData = sum(slowGammaOverlap2{4});
+burstData = burstData/max(burstData);
+bar(burstData,'FaceColor',colorVals(1,:))
+% xlabel('Gamma Burst Bins')
+ylabel(['Ori-67.5',char(176)])
+xlim([0.5 20.5])
+% ylim([1 size(burstData,1)])
+title('Slow Gamma:M2')
+
+subplot(3,4,4)
+burstData = sum(fastGammaOverlap2{4});
+burstData = burstData/max(burstData);
+bar(burstData,'FaceColor',colorVals(2,:))
+% xlabel('Gamma Burst Bins')
+ylabel(['Ori-67.5',char(176)])
+xlim([0.5 20.5])
+% ylim([1 size(burstData,1)])
+title('Fast Gamma:M2')
+
+
+% for 5 degree deviation
+subplot(3,4,5)
+burstData = sum(slowGammaOverlap1_5{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+burstData = sum(fastGammaOverlap1_5{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+ylabel(['Ori-67.5',char(176)])
+xlim([0.1 1])
+title('TW distribution along \gamma bursts')
+
+subplot(3,4,7)
+burstData = sum(slowGammaOverlap2_5{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+burstData = sum(fastGammaOverlap2_5{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+xlim([0.1 1])
+ylabel(['Ori-67.5',char(176)])
+title('TW distribution along \gamma bursts')
+
+subplot(3,4,6)
+burstData = cell2mat(cellfun(@sum,slowGammaOverlap1_5','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
+
+burstData = cell2mat(cellfun(@sum,fastGammaOverlap1_5','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
+xlim([0.1 1])
+xlabel('Gamma Burst Bins')
+ylabel('All Ori')
+title('TW distribution along \gamma bursts-all ori')
+
+subplot(3,4,8)
+burstData = cell2mat(cellfun(@sum,slowGammaOverlap2_5','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
+
+burstData = cell2mat(cellfun(@sum,fastGammaOverlap2_5','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
+xlim([0.1 1])
+xlabel('Gamma Burst Bins')
+ylabel('All Ori')
+title('TW distribution along \gamma bursts-all ori')
+
+% for 10 degree deviation
+subplot(3,4,9)
+burstData = sum(slowGammaOverlap1_10{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+burstData = sum(fastGammaOverlap1_10{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+ylabel(['Ori-67.5',char(176)])
+xlim([0.1 1])
+title('TW distribution along \gamma bursts')
+
+subplot(3,4,11)
+burstData = sum(slowGammaOverlap2_10{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+burstData = sum(fastGammaOverlap2_10{4});
+plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+xlim([0.1 1])
+ylabel(['Ori-67.5',char(176)])
+title('TW distribution along \gamma bursts')
+
+subplot(3,4,10)
+burstData = cell2mat(cellfun(@sum,slowGammaOverlap1_10','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
+
+burstData = cell2mat(cellfun(@sum,fastGammaOverlap1_10','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
+xlim([0.1 1])
+xlabel('Gamma Burst Bins')
+ylabel('All Ori')
+title('TW distribution along \gamma bursts-all ori')
+
+subplot(3,4,12)
+burstData = cell2mat(cellfun(@sum,slowGammaOverlap2_10','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
+
+burstData = cell2mat(cellfun(@sum,fastGammaOverlap2_10','UniformOutput',false));
+burstData = burstData./max(burstData,[],2);
+burstDataErr = std(burstData);
+plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
+hold on
+errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
+xlim([0.1 1])
+xlabel('Gamma Burst Bins')
+ylabel('All Ori')
+title('TW distribution along \gamma bursts-all ori')
+
+annotation('textbox',[0.09,0.98, 0, 0], 'string', 'A','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.3,0.98, 0, 0], 'string', 'B','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.505,0.98, 0, 0], 'string', 'C','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.72,0.98, 0, 0], 'string', 'D','FontSize',20,'FontWeight','bold')
+
+annotation('textbox',[0.09,0.68, 0, 0], 'string', 'E','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.3,0.68, 0, 0], 'string', 'F','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.505,0.68, 0, 0], 'string', 'G','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.72,0.68, 0, 0], 'string', 'H','FontSize',20,'FontWeight','bold')
+
+annotation('textbox',[0.09,0.38, 0, 0], 'string', 'I','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.3,0.38, 0, 0], 'string', 'J','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.505,0.38, 0, 0], 'string', 'K','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.72,0.38, 0, 0], 'string', 'L','FontSize',20,'FontWeight','bold')
+
+annotation('textbox',[0.92,0.85, 0, 0], 'string', ['0',char(176)] ,'FontSize',12,'FontWeight','bold')
+annotation('textbox',[0.92,0.55, 0, 0], 'string', ['5',char(176)],'FontSize',12,'FontWeight','bold')
+annotation('textbox',[0.92,0.25, 0, 0], 'string', ['10',char(176)],'FontSize',12,'FontWeight','bold')

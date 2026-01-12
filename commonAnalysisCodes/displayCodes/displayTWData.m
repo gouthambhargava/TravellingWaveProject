@@ -176,7 +176,7 @@ outputsTW = cell(1,numFrequencyRanges);
 state = 0; % state variable to display the phases
 waveVector = cell(1,numFrequencyRanges);
 uniqueDirs = cell(1,numFrequencyRanges);
-lengthLimit = 10;
+% lengthLimit = 10;
 
 
     function plot_Callback(~,~)
@@ -256,6 +256,11 @@ lengthLimit = 10;
 
         for i = 1:numFrequencyRanges
             [waveVector{i},uniqueDirs{i},~,clusterCube,waveType,directionCube,phaseCube] = getWaveParameters(outputsTW{i},phaseMatrix(:,:,i),locList,timeVals,lengthLimit, wobbleLim, segOption,stimulusPeriodS,waveMethod);
+            if isempty(phaseCube)
+                phaseCube = nan(size(gridLayout,1),size(gridLayout,1),length(timeVals));
+                clusterCube = nan(size(gridLayout,1),size(gridLayout,1),length(timeVals));
+                directionCube = nan(size(gridLayout,1),size(gridLayout,1),length(timeVals));
+            end   
             outputsTW{i}.clusterCube = clusterCube;
             outputsTW{i}.directionCube = directionCube;
             outputsTW{i}.phaseCube = phaseCube;  
@@ -395,9 +400,6 @@ lengthLimit = 10;
         waveMethod = get(hWaveMethod,'val'); % to be implemented in future versions
         [X,Y] = meshgrid(1:1:9);
 
-        % directionCube = nan(size(X,1),size(X,2),length(timeVals),numFrequencyRanges);
-        % phaseCube = nan(size(X,1),size(X,2),length(timeVals),numFrequencyRanges);
-
         if get(plotToggle,'Value') == 1
             state = 1; % This allows the program to start displaying the phase plots
             timeRangeProp = [str2double(get(hTimeRangePropMin,'String')) str2double(get(hTimeRangePropMax,'String'))];
@@ -432,16 +434,15 @@ lengthLimit = 10;
                 for j=1:numFrequencyRanges
                     directionCube = outputsTW{j}.directionCube;
                     phaseCube = outputsTW{j}.phaseCube;
-                    % if waveMethod==1 % uncomment to plot the relative
+                    if waveMethod==1 % uncomment to plot the relative
                     % phase for method 1
-                    %     propPlotSec = cos(outputsTW{j}.refCube);
-                    %     plotLims = [-1 1];
-                    % else
-                    %     propPlotSec = outputsTW{j}.clusterCube;
-                    %     plotLims = [0 1];
-                    % end
-                    propPlotSec = outputsTW{j}.clusterCube;    
-                    plotLims = [0 1];
+                        propPlotSec = cos(outputsTW{j}.refCube);
+                        plotLims = [-1 1];
+                    else
+                        propPlotSec = outputsTW{j}.clusterCube;
+                        plotLims = [0 1];
+                    end
+                    
                     % Delete old lines and create new ones
                     delete(xLinesBurst(1,j));
                     xLinesBurst(1,j) = line([timeVals(timeRangeProp(ind)) timeVals(timeRangeProp(ind))],get(hBursts(1,j),'YLim'),'parent',hBursts(1,j),'LineWidth',2,'Color','black');
@@ -456,33 +457,31 @@ lengthLimit = 10;
                     end
 
                     % plot absolute phases
-                    imagesc(cos(phaseCube(:,:,timeRangeProp(ind))),'parent',hGridPlots2(1,j));
+                    imagesc(flipud(cos(phaseCube(:,:,timeRangeProp(ind)))),'parent',hGridPlots2(1,j));
                     colormap(hGridPlots2(1,j),'parula');
                     clim(hGridPlots2(1,j),[-1 1]);
                     axis(hGridPlots2(1,j),'off')
-                    colorbar(hGridPlots2(1,j),'northoutside');
-                    %hold(hGridPlots2(1,j),'on')
-                    %directionGrid = directionCube(:,:,timeRangeProp(ind));
-                    %V = cos(directionGrid);
-                    %U = sin(directionGrid);
-                    %quiver(X,Y,V,U,'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))
-                    
-                    % if waveMethod==1 %uncomment to plot the relative     
-                    %     imagesc(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
-                    % else
-                    %     pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
-                    % end
-                    pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
-                    colormap(hGridPlots2(2,j),'gray');
+                    % colorbar(hGridPlots2(1,j),'northoutside');
+                    hold(hGridPlots2(1,j),'on')
+                    directionGrid = directionCube(:,:,timeRangeProp(ind));
+                    quiver(X,Y,cos(directionGrid),sin(directionGrid),'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(1,j))
+                    axis(hGridPlots2(1,j),'off')
+                    axis(hGridPlots2(1,j),'square')
+                    set(hGridPlots2(1,j),'YDir','Normal')
+
+                    if waveMethod==1 %uncomment to plot the relative     
+                        imagesc(flipud(propPlotSec(:,:,timeRangeProp(ind))),'parent',hGridPlots2(2,j));
+                        quiver(X,Y,cos(propPlotSec(:,:,timeRangeProp(ind))),sin(propPlotSec(:,:,timeRangeProp(ind))),'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(2,j))
+                    else
+                        pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
+                    end
+                    colormap(hGridPlots2(2,j),'jet');
                     clim(hGridPlots2(2,j),plotLims);
                     hold(hGridPlots2(2,j),'on')
-                    directionGrid = directionCube(:,:,timeRangeProp(ind));
-                    V = cos(directionGrid);
-                    U = sin(directionGrid);
-                    quiver(X,Y,V,U,'Color','red','LineWidth',1,'AutoScaleFactor',0.9,'parent',hGridPlots2(2,j))
                     axis(hGridPlots2(2,j),'off')
                     axis(hGridPlots2(2,j),'square')
-                    % colorbar(hGridPlots2(2,j),'northoutside');
+                    set(hGridPlots2(2,j),'YDir','Normal')
+                    colorbar(hGridPlots2(2,j),'northoutside');
                 end
                 drawnow
             end

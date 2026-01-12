@@ -49,8 +49,8 @@ numFrequencyRanges = size(outputs,1);
 timePts = size(outputs{1,1}.direction,2);
 waveBounds = cell(numFrequencyRanges,numTrials);
 burstBounds = cell(numFrequencyRanges,numTrials);
-wobble = 0;
-segOption = 3;
+wobble = 5;
+segOption = 2;
 lengthLimit = 10;
 boundryLims = [0.25 0.75];
 
@@ -82,16 +82,13 @@ for i = 1:numTrials
     end
 end
 
-
-
-
 allDurSG = diff(cell2mat(waveBounds(1,:)),[],1)*0.5;
 allDurFG = diff(cell2mat(waveBounds(2,:)),[],1)*0.5;
-meanDur = [mean(allDurSG),mean(allDurFG)]; % in milliseconds
+meanDur = [mean(allDurSG),mean(allDurFG)] % in milliseconds
 medianDur = [median(allDurSG),median(allDurFG)]; % in milliseconds
 
-stdDur = [std(allDurSG),std(allDurFG)];
-[p, ~, stats] = ranksum(allDurSG,allDurFG);
+stdDur = [std(allDurSG),std(allDurFG)]
+[p, ~, stats] = ranksum(allDurSG,allDurFG)
 
 
 allSpeedSG = speed(:,:,1);
@@ -272,7 +269,7 @@ toc
 
 
 %% get stats
-%% for M1
+% for M1
 slowGammaOverlapAll = {slowGammaOverlap1,slowGammaOverlap1_5,slowGammaOverlap1_10};
 fastGammaOverlapAll = {fastGammaOverlap1,fastGammaOverlap1_5,fastGammaOverlap1_10};
 

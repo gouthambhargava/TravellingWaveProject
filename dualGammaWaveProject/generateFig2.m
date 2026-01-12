@@ -51,7 +51,7 @@ end
 
 %% define some parameters for wave detection
 trial = 22;
-wave = 3;
+wave = 4;
 lengthLimit = 10; %ms
 boundryLims = [0.25 0.75];
 wobbleLim = 0; %degree
@@ -80,7 +80,7 @@ dirSG = nan(numTrials,length(timeVals));
 dirFG = nan(numTrials,length(timeVals));
 overlap = 0.5;
 for i = 1:numTrials
-    [waveBoundsOv{i},dirSG(i,:),dirFG(i,:),uniqueDirs{1,i}] = getOverlappingWaves(waveVector(i,:,1),waveBounds{1,i},waveVector(i,:,2),waveBounds{2,i},overlap);
+    [waveBoundsOv{i},dirSG(i,:),dirFG(i,:),uniqueDirs{1,i},~,intPts(i,:)] = getOverlappingWaves(waveVector(i,:,1),waveBounds{1,i},waveVector(i,:,2),waveBounds{2,i},overlap);
     % allUniqueDirs = cat(2,allUniqueDirs,uniqueDirs);
 end
 
@@ -97,7 +97,7 @@ figure(1)
 subplot(1,2,1)
 plotWavesAllTrials(waveVector,timeVals,[0.25 0.75])
 hold on
-plot(timeVals,ovWaves.*trialsNum','LineWidth',0.8,'Color','black')
+plot(timeVals,intPts.*trialsNum','LineWidth',0.8,'Color','black')
 hold on
 patch([0.25 0.75 0.75 0.25], [trial-1 trial-1 trial trial], 'red','FaceAlpha',0.2,'EdgeColor','red','LineStyle','none')
 ylim([0 35])
@@ -114,18 +114,16 @@ annotation('textbox',[0.01, 0.550, 0.1, 0.1],'String','Fast Gamma','FontSize',12
 annotation('textbox',[0.01, 0.510, 0.1, 0.1],'String','Overlapping Waves','FontSize',12,'Color','black','EdgeColor','none')
 
 % get overlapping TW's
-
-
 pgd(:,1) = outputsTW{1,trial}.pgd(1,:);
 pgd(:,2) = outputsTW{2,trial}.pgd(1,:);
 pgd(pgd<0) = 0;
 pgd(isnan(pgd)) = 0;
 
-directionO(:,1) = dirSG(trial,:);
-directionO(:,2) = dirFG(trial,:);
+directionO(:,1) = waveVector(trial,:,1);
+directionO(:,2) = waveVector(trial,:,2);
 
-directionOv = directionO(:,1);
-directionOv(isnan(directionO(:,2))) = nan;
+directionOv = intPts(trial,:);
+% directionOv(isnan(directionO(:,2))) = nan;
 
 durIndices = [waveBoundsOv{1,trial}{1,1}(:,wave),waveBoundsOv{1,trial}{2,1}(:,wave)];
 durIndices = intersect(durIndices(1,1):durIndices(2,1),durIndices(1,2):durIndices(2,2));
@@ -211,15 +209,18 @@ sizePos = 0.2;
 dataLabels = timeVals(durIndices(1):durIndices(end));
 for i = 1:length(posD)
     axes('Position',[posL(i) posD(i) sizePos sizePos])
-    imagesc(cos(phaseData1(:,:,phaseInd1(1,i))))
+    imagesc(flipud(cos(phaseData1(:,:,phaseInd1(1,i)))))
     hold on
     clim([-1 1])
     quiver(x,y,cos(dirData1(:,:,i)),sin(dirData1(:,:,i)),'color','white','AutoScaleFactor',0.9)
     title(['Time:',num2str(round(dataLabels(phaseInd1(1,i)),3)),'s'])
     axis off
+    set(gca,'YDir','normal')
 end
 annotation('textbox',[0.08,0.95, 0, 0], 'string', 'B','FontSize',30,'FontWeight','bold')
 % get background gradient with imagesc for TW progression - for figure 2 - fast gamma
+
+
 figure(3)
 yVals = [0 0 100 120 120 100];
 vertices = cat(1,xVals,yVals)';
@@ -246,7 +247,7 @@ hold on
 plot(timeVals,pgd(:,2),'color','k','linewidth',1);
 hold on
 plot(timeVals,burstFracRed(:,2)*-0.2,'|','LineWidth',1.2,'Color','green')
-temp = directionO(:,1);
+temp = directionO(:,2);
 temp(~isnan(temp)) = 1;
 plot(timeVals,temp*-0.05,'|','LineWidth',1.2,'Color',colorValsNo(2,:))
 temp = directionOv;
@@ -266,11 +267,12 @@ sizePos = 0.2;
 dataLabels = timeVals(durIndices(1):durIndices(end));
 for i = 1:length(posD)
     axes('Position',[posL(i) posD(i) sizePos sizePos])
-    imagesc(cos(phaseData2(:,:,phaseInd2(1,i))))
+    imagesc(flipud(cos(phaseData2(:,:,phaseInd2(1,i)))))
     hold on
     clim([-1 1])
     quiver(x,y,cos(dirData2(:,:,i)),sin(dirData2(:,:,i)),'color','white','AutoScaleFactor',0.9)
     title(['Time:',num2str(round(dataLabels(phaseInd2(1,i)),3)),'s'])
+    set(gca,'YDir','normal')
     axis off
 end
 

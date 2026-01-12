@@ -323,18 +323,18 @@ title('Directions - Overlapping')
 % get scatter plot - 0 deg
 nexttile
 scatter(sgOvMean,fgOvMean,'filled','LineWidth',0.01)
-hold on
-sgOvFull = m1_0deg{3}(:,1);
-fgOvFull = m1_0deg{3}(:,2);
+% hold on
+% sgOvFull = m1_0deg{3}(:,1);
+% fgOvFull = m1_0deg{3}(:,2);
 randWaves = [1 2 3 4 6];
-% randWaves = randsample(1:length(sgOvFull),5);
-colors = jet(numel(randWaves));
-for i = 1:numel(randWaves)
-    scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
-    hold on
-    s = scatter(wrapToPi(sgOvFull{randWaves(i)}),wrapToPi(fgOvFull{randWaves(i)}),'filled','MarkerFaceColor',colors(i,:),'MarkerEdgeColor','none');
-    s.MarkerFaceAlpha = 0.05;
-end
+% % randWaves = randsample(1:length(sgOvFull),5);
+% colors = jet(numel(randWaves));
+% for i = 1:numel(randWaves)
+%     % scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
+%     s = scatter(wrapToPi(sgOvFull{randWaves(i)}),wrapToPi(fgOvFull{randWaves(i)}),'filled','MarkerFaceColor',colors(i,:),'MarkerEdgeColor','none');
+%     s.MarkerFaceAlpha = 0.05;
+%     hold on
+% end
 xlabel('Slow Gamma')
 ylabel('Fast Gamma')
 title('SG/FG Directions')
@@ -420,17 +420,18 @@ title('Directions - Overlapping')
 % get scatter plot - 0 deg
 nexttile
 scatter(sgOvMean,fgOvMean,'filled','LineWidth',0.01)
-hold on
-sgOvFull = m2_0deg{3}(:,1);
-fgOvFull = m2_0deg{3}(:,2);
+% hold on
+% sgOvFull = m2_0deg{3}(:,1);
+% fgOvFull = m2_0deg{3}(:,2);
 % randWaves = randsample(1:length(sgOvFull),5);
 % colors = parula(numel(randWaves));
-for i = 1:numel(randWaves)
-    scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
-    hold on
-    s = scatter(wrapToPi(sgOvFull{randWaves(i)}),wrapToPi(fgOvFull{randWaves(i)}),'filled','MarkerFaceColor',colors(i,:),'MarkerEdgeColor','none');
-    s.MarkerFaceAlpha = 0.05;
-end
+% for i = 1:numel(randWaves)
+%     % scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
+% 
+%     s = scatter(wrapToPi(sgOvFull{randWaves(i)}),wrapToPi(fgOvFull{randWaves(i)}),'filled','MarkerFaceColor',colors(i,:),'MarkerEdgeColor','none');
+%     s.MarkerFaceAlpha = 0.05;
+%  hold on
+% end
 xlabel('Slow Gamma')
 ylabel('Fast Gamma')
 title('SG/FG Directions')

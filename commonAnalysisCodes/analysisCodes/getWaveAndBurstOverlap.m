@@ -1,3 +1,4 @@
+
 function [slowGammaOverlap,fastGammaOverlap,burstTS] = getWaveAndBurstOverlap(burstTS,outputs,timeVals,burstLengthLimit,waveLengthLimit,waveWobble,binEdges,goodElectrodes,thresh,segOption)
 % function only for generating figure 5. Identifies overlapping gamma
 % bursts and subsequently the variation of wave locations within these
