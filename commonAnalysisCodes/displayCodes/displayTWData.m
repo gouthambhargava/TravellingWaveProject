@@ -457,7 +457,7 @@ uniqueDirs = cell(1,numFrequencyRanges);
                     end
 
                     % plot absolute phases
-                    imagesc(flipud(cos(phaseCube(:,:,timeRangeProp(ind)))),'parent',hGridPlots2(1,j));
+                    imagesc(cos(phaseCube(:,:,timeRangeProp(ind))),'parent',hGridPlots2(1,j));
                     colormap(hGridPlots2(1,j),'parula');
                     clim(hGridPlots2(1,j),[-1 1]);
                     axis(hGridPlots2(1,j),'off')
@@ -470,7 +470,8 @@ uniqueDirs = cell(1,numFrequencyRanges);
                     set(hGridPlots2(1,j),'YDir','Normal')
 
                     if waveMethod==1 %uncomment to plot the relative     
-                        imagesc(flipud(propPlotSec(:,:,timeRangeProp(ind))),'parent',hGridPlots2(2,j));
+                        imagesc(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
+                        set(hGridPlots2(2,j),'YDir','Normal')
                         quiver(X,Y,cos(propPlotSec(:,:,timeRangeProp(ind))),sin(propPlotSec(:,:,timeRangeProp(ind))),'Color','white','LineWidth',1,'AutoScaleFactor',0.5,'parent',hGridPlots2(2,j))
                     else
                         pcolor(propPlotSec(:,:,timeRangeProp(ind)),'parent',hGridPlots2(2,j));
@@ -480,7 +481,6 @@ uniqueDirs = cell(1,numFrequencyRanges);
                     hold(hGridPlots2(2,j),'on')
                     axis(hGridPlots2(2,j),'off')
                     axis(hGridPlots2(2,j),'square')
-                    set(hGridPlots2(2,j),'YDir','Normal')
                     colorbar(hGridPlots2(2,j),'northoutside');
                 end
                 drawnow

@@ -52,8 +52,8 @@ if ~isempty(overlapTW)
             bounds2 = newBounds{2}(:,j);
             allDirSg(bounds1(1):bounds1(2)) = dirSg(bounds1(1):bounds1(2));
             allDirFg(bounds2(1):bounds2(2)) = dirFg(bounds2(1):bounds2(2));
-            vals1 = circ_mean(unique(dirSg(bounds1(1):bounds1(2)))');
-            vals2 = circ_mean(unique(dirFg(bounds2(1):bounds2(2)))');
+            vals1 = circ_mean(dirSg(bounds1(1):bounds1(2))');
+            vals2 = circ_mean(dirFg(bounds2(1):bounds2(2))');
             vals1(isnan(vals1)) = [];
             vals2(isnan(vals2)) = [];
             uniqueDirs1 = cat(2,uniqueDirs1,vals1);

@@ -110,7 +110,6 @@ for i = 1:length(oriPos) % for all ori
 end
 toc
 
-
 %% generate the plot
 colorVals = cat(1,[52 148 186]./255,[236 112 22]./255);
 subplot(5,4,[1,5])
@@ -118,11 +117,13 @@ burstData = slowGammaOverlap1{4};
 burstData(burstData>0) = 1;
 burstData(burstData==0) = nan;
 multi = 1:size(burstData,1);
-plot(binEdges(2:end),burstData.*multi','Color',colorVals(1,:))
-% xlabel('Gamma Burst Bins')
+plot(binEdges(2:end),burstData.*multi','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+yline(1:size(burstData,1),':','LineWidth',0.4,'Color',colorVals(1,:))
 ylabel(['Travelling Waves Locations:67.5',char(176)])
 xlim([0.1 1])
-ylim([1 size(burstData,1)])
+ylim([1 size(burstData,1)+1])
+yticks(round(linspace(1,size(burstData,1),10)))
 title('Slow Gamma:M1')
 
 subplot(5,4,[2,6])
@@ -130,11 +131,13 @@ burstData = fastGammaOverlap1{4};
 burstData(burstData>0) = 1;
 burstData(burstData==0) = nan;
 multi = 1:size(burstData,1);
-plot(binEdges(2:end),burstData.*multi','Color',colorVals(2,:))
-% xlabel('Gamma Burst Bins')
+plot(binEdges(2:end),burstData.*multi','LineWidth',1.2,'Color',colorVals(2,:))
+hold on
+yline(1:size(burstData,1),':','LineWidth',0.4,'Color',colorVals(2,:))
 ylabel(['Travelling Waves Locations:67.5',char(176)])
 xlim([0.1 1])
-ylim([1 size(burstData,1)])
+ylim([1 size(burstData,1)+1])
+yticks(round(linspace(1,size(burstData,1),10)))
 title('Fast Gamma:M1')
 
 subplot(5,4,[3,7])
@@ -142,11 +145,13 @@ burstData = slowGammaOverlap2{4};
 burstData(burstData>0) = 1;
 burstData(burstData==0) = nan;
 multi = 1:size(burstData,1);
-plot(binEdges(2:end),burstData.*multi','Color',colorVals(1,:))
-% xlabel('Gamma Burst Bins')
+plot(binEdges(2:end),burstData.*multi','LineWidth',1.2,'Color',colorVals(1,:))
+hold on
+yline(1:size(burstData,1),':','LineWidth',0.4,'Color',colorVals(1,:))
 ylabel(['Travelling Waves Locations:67.5',char(176)])
 xlim([0.1 1])
-ylim([1 size(burstData,1)])
+ylim([1 size(burstData,1)+1])
+yticks(round(linspace(1,size(burstData,1),10)))
 title('Slow Gamma:M2')
 
 subplot(5,4,[4,8])
@@ -154,11 +159,13 @@ burstData = fastGammaOverlap2{4};
 burstData(burstData>0) = 1;
 burstData(burstData==0) = nan;
 multi = 1:size(burstData,1);
-plot(binEdges(2:end),burstData.*multi','Color',colorVals(2,:))
-% xlabel('Gamma Burst Bins')
+plot(binEdges(2:end),burstData.*multi','LineWidth',1.2,'Color',colorVals(2,:))
+hold on
+yline(1:size(burstData,1),':','LineWidth',0.4,'Color',colorVals(2,:))
 ylabel(['Travelling Waves Locations:67.5',char(176)])
 xlim([0.1 1])
-ylim([1 size(burstData,1)])
+ylim([1 size(burstData,1)+1])
+yticks(round(linspace(1,size(burstData,1),10)))
 title('Fast Gamma:M2')
 
 subplot(5,4,9)
@@ -339,205 +346,30 @@ title('TW distribution along \gamma bursts-all ori')
 
 annotation('textbox',[0.09,0.98, 0, 0], 'string', 'A','FontSize',20,'FontWeight','bold')
 annotation('textbox',[0.3,0.98, 0, 0], 'string', 'B','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.505,0.98, 0, 0], 'string', 'C','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.72,0.98, 0, 0], 'string', 'D','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.505,0.98, 0, 0], 'string', 'I','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.72,0.98, 0, 0], 'string', 'J','FontSize',20,'FontWeight','bold')
 
-annotation('textbox',[0.09,0.61, 0, 0], 'string', 'E','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.3,0.61, 0, 0], 'string', 'F','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.505,0.61, 0, 0], 'string', 'G','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.72,0.61, 0, 0], 'string', 'H','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.09,0.61, 0, 0], 'string', 'C','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.3,0.61, 0, 0], 'string', 'D','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.505,0.61, 0, 0], 'string', 'K','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.72,0.61, 0, 0], 'string', 'L','FontSize',20,'FontWeight','bold')
 
-annotation('textbox',[0.09,0.45, 0, 0], 'string', 'I','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.3,0.45, 0, 0], 'string', 'J','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.505,0.45, 0, 0], 'string', 'K','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.72,0.45, 0, 0], 'string', 'L','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.09,0.45, 0, 0], 'string', 'E','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.3,0.45, 0, 0], 'string', 'F','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.505,0.45, 0, 0], 'string', 'M','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.72,0.45, 0, 0], 'string', 'N','FontSize',20,'FontWeight','bold')
 
-annotation('textbox',[0.09,0.27, 0, 0], 'string', 'M','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.3,0.27, 0, 0], 'string', 'N','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.09,0.27, 0, 0], 'string', 'G','FontSize',20,'FontWeight','bold')
+annotation('textbox',[0.3,0.27, 0, 0], 'string', 'H','FontSize',20,'FontWeight','bold')
 annotation('textbox',[0.505,0.27, 0, 0], 'string', 'O','FontSize',20,'FontWeight','bold')
 annotation('textbox',[0.72,0.27, 0, 0], 'string', 'P','FontSize',20,'FontWeight','bold')
 
-annotation('textbox',[0.92,0.55, 0, 0], 'string', ['0',char(176)] ,'FontSize',12,'FontWeight','bold')
-annotation('textbox',[0.92,0.38, 0, 0], 'string', ['5',char(176)],'FontSize',12,'FontWeight','bold')
-annotation('textbox',[0.92,0.20, 0, 0], 'string', ['10',char(176)],'FontSize',12,'FontWeight','bold')
+annotation('textbox',[0.92,0.55, 0, 0], 'string', ['0',char(176)] ,'FontSize',12,'FontWeight','bold','EdgeColor','none','Color',colorVals(1,:))
+annotation('textbox',[0.92,0.38, 0, 0], 'string', ['5',char(176)],'FontSize',12,'FontWeight','bold','EdgeColor','none','Color','red')
+annotation('textbox',[0.92,0.20, 0, 0], 'string', ['10',char(176)],'FontSize',12,'FontWeight','bold','EdgeColor','none','Color','green')
 
-%%
-%% generate the plot
-colorVals = cat(1,[52 148 186]./255,[236 112 22]./255);
-subplot(3,4,1)
-burstData = sum(slowGammaOverlap1{4});
-burstData = burstData/max(burstData);
-bar(burstData,'FaceColor',colorVals(1,:))
-% xlabel('Gamma Burst Bins')
-ylabel(['Ori-67.5',char(176)])
-xlim([0.5 20.5])
-% ylim([1 size(burstData,1)])
-title('Slow Gamma:M1')
-
-subplot(3,4,2)
-burstData = sum(fastGammaOverlap1{4});
-burstData = burstData/max(burstData);
-bar(burstData,'FaceColor',colorVals(2,:))
-% xlabel('Gamma Burst Bins')
-ylabel(['Ori-67.5',char(176)])
-xlim([0.5 20.5])
-% ylim([1 size(burstData,1)])
-title('Fast Gamma:M1')
-
-subplot(3,4,3)
-burstData = sum(slowGammaOverlap2{4});
-burstData = burstData/max(burstData);
-bar(burstData,'FaceColor',colorVals(1,:))
-% xlabel('Gamma Burst Bins')
-ylabel(['Ori-67.5',char(176)])
-xlim([0.5 20.5])
-% ylim([1 size(burstData,1)])
-title('Slow Gamma:M2')
-
-subplot(3,4,4)
-burstData = sum(fastGammaOverlap2{4});
-burstData = burstData/max(burstData);
-bar(burstData,'FaceColor',colorVals(2,:))
-% xlabel('Gamma Burst Bins')
-ylabel(['Ori-67.5',char(176)])
-xlim([0.5 20.5])
-% ylim([1 size(burstData,1)])
-title('Fast Gamma:M2')
+annotation('textbox',[0.91, 0.687, 0.1, 0.1],'String','Slow Gamma','FontSize',12,'Color',colorVals(1,:),'EdgeColor','none')
+annotation('textbox',[0.91, 0.650, 0.1, 0.1],'String','Fast Gamma','FontSize',12,'Color',colorVals(2,:),'EdgeColor','none')
 
 
-% for 5 degree deviation
-subplot(3,4,5)
-burstData = sum(slowGammaOverlap1_5{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-burstData = sum(fastGammaOverlap1_5{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-ylabel(['Ori-67.5',char(176)])
-xlim([0.1 1])
-title('TW distribution along \gamma bursts')
 
-subplot(3,4,7)
-burstData = sum(slowGammaOverlap2_5{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-burstData = sum(fastGammaOverlap2_5{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-xlim([0.1 1])
-ylabel(['Ori-67.5',char(176)])
-title('TW distribution along \gamma bursts')
-
-subplot(3,4,6)
-burstData = cell2mat(cellfun(@sum,slowGammaOverlap1_5','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
-
-burstData = cell2mat(cellfun(@sum,fastGammaOverlap1_5','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
-xlim([0.1 1])
-xlabel('Gamma Burst Bins')
-ylabel('All Ori')
-title('TW distribution along \gamma bursts-all ori')
-
-subplot(3,4,8)
-burstData = cell2mat(cellfun(@sum,slowGammaOverlap2_5','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
-
-burstData = cell2mat(cellfun(@sum,fastGammaOverlap2_5','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
-xlim([0.1 1])
-xlabel('Gamma Burst Bins')
-ylabel('All Ori')
-title('TW distribution along \gamma bursts-all ori')
-
-% for 10 degree deviation
-subplot(3,4,9)
-burstData = sum(slowGammaOverlap1_10{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-burstData = sum(fastGammaOverlap1_10{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-ylabel(['Ori-67.5',char(176)])
-xlim([0.1 1])
-title('TW distribution along \gamma bursts')
-
-subplot(3,4,11)
-burstData = sum(slowGammaOverlap2_10{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-burstData = sum(fastGammaOverlap2_10{4});
-plot(binEdges(2:end),burstData/max(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-xlim([0.1 1])
-ylabel(['Ori-67.5',char(176)])
-title('TW distribution along \gamma bursts')
-
-subplot(3,4,10)
-burstData = cell2mat(cellfun(@sum,slowGammaOverlap1_10','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
-
-burstData = cell2mat(cellfun(@sum,fastGammaOverlap1_10','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
-xlim([0.1 1])
-xlabel('Gamma Burst Bins')
-ylabel('All Ori')
-title('TW distribution along \gamma bursts-all ori')
-
-subplot(3,4,12)
-burstData = cell2mat(cellfun(@sum,slowGammaOverlap2_10','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(1,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(1,:))
-
-burstData = cell2mat(cellfun(@sum,fastGammaOverlap2_10','UniformOutput',false));
-burstData = burstData./max(burstData,[],2);
-burstDataErr = std(burstData);
-plot(binEdges(2:end),mean(burstData),'-o','LineWidth',1.2,'Color',colorVals(2,:))
-hold on
-errorbar(binEdges(2:end),mean(burstData),burstDataErr,'LineWidth',1.2,'Color',colorVals(2,:))
-xlim([0.1 1])
-xlabel('Gamma Burst Bins')
-ylabel('All Ori')
-title('TW distribution along \gamma bursts-all ori')
-
-annotation('textbox',[0.09,0.98, 0, 0], 'string', 'A','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.3,0.98, 0, 0], 'string', 'B','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.505,0.98, 0, 0], 'string', 'C','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.72,0.98, 0, 0], 'string', 'D','FontSize',20,'FontWeight','bold')
-
-annotation('textbox',[0.09,0.68, 0, 0], 'string', 'E','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.3,0.68, 0, 0], 'string', 'F','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.505,0.68, 0, 0], 'string', 'G','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.72,0.68, 0, 0], 'string', 'H','FontSize',20,'FontWeight','bold')
-
-annotation('textbox',[0.09,0.38, 0, 0], 'string', 'I','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.3,0.38, 0, 0], 'string', 'J','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.505,0.38, 0, 0], 'string', 'K','FontSize',20,'FontWeight','bold')
-annotation('textbox',[0.72,0.38, 0, 0], 'string', 'L','FontSize',20,'FontWeight','bold')
-
-annotation('textbox',[0.92,0.85, 0, 0], 'string', ['0',char(176)] ,'FontSize',12,'FontWeight','bold')
-annotation('textbox',[0.92,0.55, 0, 0], 'string', ['5',char(176)],'FontSize',12,'FontWeight','bold')
-annotation('textbox',[0.92,0.25, 0, 0], 'string', ['10',char(176)],'FontSize',12,'FontWeight','bold')

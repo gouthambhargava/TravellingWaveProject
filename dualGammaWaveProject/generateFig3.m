@@ -305,6 +305,9 @@ m2_10deg = {uniqueDirs,allUniqueDirs,allOvWaves,ovTrials};
 clear uniqueDirs uniqueDirsTemp allFGWaves allSGWaves allUniqueDirs dirFG overlappingPts dirSG emptyCells fgWaves i j numTrials outputsM1 ovTrials sgWaves waveTemp waveVector
 %% plot results
 binWidth = 10;
+randWaves = [1 2 3 4 6];
+colors = jet(numel(randWaves));
+
 tiledlayout(2,5,'TileSpacing','Compact');
 colorVals = cat(1,[52 148 186]./255,[236 112 22]./255);
 h1 = nexttile;
@@ -323,18 +326,6 @@ title('Directions - Overlapping')
 % get scatter plot - 0 deg
 nexttile
 scatter(sgOvMean,fgOvMean,'filled','LineWidth',0.01)
-% hold on
-% sgOvFull = m1_0deg{3}(:,1);
-% fgOvFull = m1_0deg{3}(:,2);
-randWaves = [1 2 3 4 6];
-% % randWaves = randsample(1:length(sgOvFull),5);
-% colors = jet(numel(randWaves));
-% for i = 1:numel(randWaves)
-%     % scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
-%     s = scatter(wrapToPi(sgOvFull{randWaves(i)}),wrapToPi(fgOvFull{randWaves(i)}),'filled','MarkerFaceColor',colors(i,:),'MarkerEdgeColor','none');
-%     s.MarkerFaceAlpha = 0.05;
-%     hold on
-% end
 xlabel('Slow Gamma')
 ylabel('Fast Gamma')
 title('SG/FG Directions')
@@ -420,18 +411,6 @@ title('Directions - Overlapping')
 % get scatter plot - 0 deg
 nexttile
 scatter(sgOvMean,fgOvMean,'filled','LineWidth',0.01)
-% hold on
-% sgOvFull = m2_0deg{3}(:,1);
-% fgOvFull = m2_0deg{3}(:,2);
-% randWaves = randsample(1:length(sgOvFull),5);
-% colors = parula(numel(randWaves));
-% for i = 1:numel(randWaves)
-%     % scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
-% 
-%     s = scatter(wrapToPi(sgOvFull{randWaves(i)}),wrapToPi(fgOvFull{randWaves(i)}),'filled','MarkerFaceColor',colors(i,:),'MarkerEdgeColor','none');
-%     s.MarkerFaceAlpha = 0.05;
-%  hold on
-% end
 xlabel('Slow Gamma')
 ylabel('Fast Gamma')
 title('SG/FG Directions')
@@ -452,8 +431,6 @@ scatter(sgOvMean,fgOvMean,'filled','LineWidth',0.01)
 hold on
 sgOvFull = m2_5deg{3}(:,1);
 fgOvFull = m2_5deg{3}(:,2);
-% randWaves = randsample(1:length(sgOvFull),5);
-% colors = parula(numel(randWaves));
 for i = 1:numel(randWaves)
     scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
     hold on
@@ -480,8 +457,6 @@ scatter(sgOvMean,fgOvMean,'filled','LineWidth',0.01)
 hold on
 sgOvFull = m2_10deg{3}(:,1);
 fgOvFull = m2_10deg{3}(:,2);
-% randWaves = randsample(1:length(sgOvFull),5);
-% colors = parula(numel(randWaves));
 for i = 1:numel(randWaves)
     scatter(sgOvMean(randWaves(i)),fgOvMean(randWaves(i)),'filled','LineWidth',0.01,'MarkerFaceColor',colors(i,:))
     hold on
@@ -509,9 +484,6 @@ annotation('textbox',[0.4, 0.965, 0.02, 0.02], 'string', 'C','FontSize',24,'Font
 annotation('textbox',[0.58, 0.965, 0.02, 0.02], 'string', 'D','FontSize',24,'FontWeight','bold','EdgeColor','none')
 annotation('textbox',[0.74, 0.965, 0.02, 0.02], 'string', 'E','FontSize',24,'FontWeight','bold','EdgeColor','none')
 
-
-
-
 annotation('textbox',[0.025, 0.5, 0.02, 0.02], 'string', 'F','FontSize',24,'FontWeight','bold','EdgeColor','none')
 annotation('textbox',[0.22, 0.5, 0.02, 0.02], 'string', 'G','FontSize',24,'FontWeight','bold','EdgeColor','none')
 annotation('textbox',[0.4, 0.5, 0.02, 0.02], 'string', 'H','FontSize',24,'FontWeight','bold','EdgeColor','none')
@@ -521,3 +493,9 @@ annotation('rectangle',[0.92, 0.75, 0.02, 0.02], 'FaceColor',colorVals(1,:),'Edg
 annotation('rectangle',[0.92, 0.7, 0.02, 0.02], 'FaceColor',colorVals(2,:),'EdgeColor','black')
 annotation('textbox',[0.94, 0.73, 0.1, 0.05], 'string', 'Slow Gamma','FontSize',10,'EdgeColor','none')
 annotation('textbox',[0.94, 0.68, 0.1, 0.05], 'string', 'Fast Gamma','FontSize',10,'EdgeColor','none')
+
+annotation('textbox',[0.495,0.53, 0, 0], 'string', ['0',char(176)] ,'FontSize',12,'FontWeight','bold','EdgeColor','none','Color',colorVals(1,:))
+annotation('textbox',[0.67,0.53, 0, 0], 'string', ['5',char(176)],'FontSize',12,'FontWeight','bold','EdgeColor','none','Color','red')
+annotation('textbox',[0.835,0.53, 0, 0], 'string', ['10',char(176)],'FontSize',12,'FontWeight','bold','EdgeColor','none','Color','green')
+
+
